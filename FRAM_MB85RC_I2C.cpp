@@ -32,7 +32,7 @@
     Constructor
 */
 /**************************************************************************/
-FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(void) 
+FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(void)
 {
 		_framInitialised = false;
 		_manualMode = false;
@@ -42,7 +42,7 @@ FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(void)
 
 }
 
-FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp) 
+FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp)
 {
 		_framInitialised = false;
 		_manualMode = false;
@@ -51,17 +51,16 @@ FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp)
 		byte result = FRAM_MB85RC_I2C::initWP(wp);
 }
 
-FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin) 
+FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin)
 {
 		_framInitialised = false;
 		_manualMode = false;
 		i2c_addr = address;
 		wpPin = pin;
 		byte result = FRAM_MB85RC_I2C::initWP(wp);
-		
 }
 
-FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin, uint16_t chipDensity) 
+FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin, uint16_t chipDensity)
 {
 		//This constructor provides capability for chips without the device IDs implemented
 		_framInitialised = false;
@@ -71,8 +70,6 @@ FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin, uint16_t 
 		density = chipDensity;
 
 		byte result = FRAM_MB85RC_I2C::initWP(wp);
-		
-		
 }
 
 /*========================================================================*/
@@ -80,9 +77,6 @@ FRAM_MB85RC_I2C::FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin, uint16_t 
 /*========================================================================*/
 
 void FRAM_MB85RC_I2C::begin(void) {
-
-	
-	
 	byte deviceFound = FRAM_MB85RC_I2C::checkDevice();
 
     #if defined(SERIAL_DEBUG) && (SERIAL_DEBUG == 1)
@@ -121,7 +115,7 @@ void FRAM_MB85RC_I2C::begin(void) {
 			7 = device not found
 */
 /**************************************************************************/
-byte FRAM_MB85RC_I2C::checkDevice(void) 
+byte FRAM_MB85RC_I2C::checkDevice(void)
 {
 	byte result;
 	if (_manualMode) {
@@ -130,8 +124,7 @@ byte FRAM_MB85RC_I2C::checkDevice(void)
 	else {
 		result = getDeviceIDs();
 	}
-  
-	// 
+
 	if ((result == ERROR_0) && ((manufacturer == FUJITSU_MANUFACT_ID) || (manufacturer == CYPRESS_MANUFACT_ID) || (manufacturer == MANUALMODE_MANUFACT_ID)) && (maxaddress != 0)) {
 		_framInitialised = true;
 	}
@@ -146,7 +139,7 @@ byte FRAM_MB85RC_I2C::checkDevice(void)
 /**************************************************************************/
 /*!
     @brief  Writes an array of bytes from a specific address
-    
+
     @params[in] i2cAddr
                 The I2C address of the FRAM memory chip (1010+A2+A1+A0)
     @params[in] framAddr
@@ -162,8 +155,6 @@ byte FRAM_MB85RC_I2C::checkDevice(void)
 byte FRAM_MB85RC_I2C::writeArray (uint16_t framAddr, byte items, uint8_t values[])
 {
 	if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_11;
-	
-	
 	FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
 	for (byte i=0; i < items ; i++) {
 		Wire.write(values[i]);
@@ -174,7 +165,7 @@ byte FRAM_MB85RC_I2C::writeArray (uint16_t framAddr, byte items, uint8_t values[
 /**************************************************************************/
 /*!
     @brief  Writes a single byte to a specific address
-    
+
     @params[in] i2cAddr
                 The I2C address of the FRAM memory chip (1010+A2+A1+A0)
     @params[in] framAddr
@@ -188,7 +179,7 @@ byte FRAM_MB85RC_I2C::writeArray (uint16_t framAddr, byte items, uint8_t values[
 
 byte FRAM_MB85RC_I2C::writeByte (uint16_t framAddr, uint8_t value)
 {
-	uint8_t buffer[] = {value}; 
+	uint8_t buffer[] = {value};
 	return FRAM_MB85RC_I2C::writeArray(framAddr, 1, buffer);
 }
 
@@ -206,14 +197,13 @@ byte FRAM_MB85RC_I2C::writeByte (uint16_t framAddr, uint8_t value)
 				number of items to read from memory chip
 	@params[out] values[]
 				array to be filled in by the memory read
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 */
 /**************************************************************************/
 byte FRAM_MB85RC_I2C::readArray (uint16_t framAddr, byte items, uint8_t values[])
 {
 	if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_11;
-	
 	byte result;
 	if (items == 0) {
 		result = ERROR_8; //number of bytes asked to read null
@@ -221,7 +211,6 @@ byte FRAM_MB85RC_I2C::readArray (uint16_t framAddr, byte items, uint8_t values[]
 	else {
 		FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
 		result = Wire.endTransmission();
-		
 		Wire.requestFrom(i2c_addr, (uint8_t)items);
 		for (byte i=0; i < items; i++) {
 			values[i] = Wire.read();
@@ -265,7 +254,7 @@ byte FRAM_MB85RC_I2C::readByte (uint16_t framAddr, uint8_t *value)
 				return code of Wire.endTransmission()
 */
 /**************************************************************************/
-byte FRAM_MB85RC_I2C::copyByte (uint16_t origAddr, uint16_t destAddr) 
+byte FRAM_MB85RC_I2C::copyByte (uint16_t origAddr, uint16_t destAddr)
 {
 	uint8_t buffer[1];
 	byte result = FRAM_MB85RC_I2C::readByte(origAddr, buffer);
@@ -284,7 +273,7 @@ byte FRAM_MB85RC_I2C::copyByte (uint16_t origAddr, uint16_t destAddr)
                 The bit position to read
 	@params[out] *bit
 				value of the bit: 0 | 1
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 				return code 9 if bit position is larger than 7
 */
@@ -311,7 +300,7 @@ byte FRAM_MB85RC_I2C::readBit(uint16_t framAddr, uint8_t bitNb, byte *bit)
                 The 16-bit address to read from in FRAM memory
     @params[in] bitNb
                 The bit position to set
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 				return code 9 if bit position is larger than 7
 */
@@ -338,7 +327,7 @@ byte FRAM_MB85RC_I2C::setOneBit(uint16_t framAddr, uint8_t bitNb)
                 The 16-bit address to read from in FRAM memory
     @params[in] bitNb
                 The bit position to clear
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 				return code 9 if bit position is larger than 7
 */
@@ -365,7 +354,7 @@ byte FRAM_MB85RC_I2C::clearOneBit(uint16_t framAddr, uint8_t bitNb)
                 The 16-bit address to read from in FRAM memory
     @params[in] bitNb
                 The bit position to toggle
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 				return code 9 if bit position is larger than 7
 */
@@ -379,7 +368,7 @@ byte FRAM_MB85RC_I2C::toggleBit(uint16_t framAddr, uint8_t bitNb)
 	else {
 		uint8_t buffer[1];
 		result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
-		
+
 		if ( (buffer[0] & (1 << bitNb)) == (1 << bitNb) )
 		{
 			bitClear(buffer[0], bitNb);
@@ -399,7 +388,7 @@ byte FRAM_MB85RC_I2C::toggleBit(uint16_t framAddr, uint8_t bitNb)
                 The 16-bit address to read from in FRAM memory
 	@params[out] value
 				16bits word
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 */
 /**************************************************************************/
@@ -419,7 +408,7 @@ byte FRAM_MB85RC_I2C::readWord(uint16_t framAddr, uint16_t *value)
                 The 16-bit address to read from in FRAM memory
 	@params[in] value
 				16bits word
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 */
 /**************************************************************************/
@@ -436,7 +425,7 @@ byte FRAM_MB85RC_I2C::writeWord(uint16_t framAddr, uint16_t value)
                 The 16-bit address to read from FRAM memory
 	@params[in] value
 				32bits word
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 */
 /**************************************************************************/
@@ -456,7 +445,7 @@ byte FRAM_MB85RC_I2C::readLong(uint16_t framAddr, uint32_t *value)
                 The 16-bit address to write to FRAM memory
 	@params[in] value
 				32bits word
-    @returns    
+    @returns
 				return code of Wire.endTransmission()
 */
 /**************************************************************************/
@@ -478,14 +467,14 @@ byte FRAM_MB85RC_I2C::writeLong(uint16_t framAddr, uint32_t value)
 				  1: error
 */
 /**************************************************************************/
-byte FRAM_MB85RC_I2C::getOneDeviceID(uint8_t idType, uint16_t *id) 
+byte FRAM_MB85RC_I2C::getOneDeviceID(uint8_t idType, uint16_t *id)
 {
 	byte result;
 	const uint8_t manuf = 1;
 	const uint8_t prod = 2;
 	const uint8_t densc = 3;
 	const uint8_t densi = 4;
-	
+
 	switch (idType) {
 		case manuf:
 			*id = manufacturer;
@@ -608,19 +597,18 @@ byte FRAM_MB85RC_I2C::disableWP() {
 byte FRAM_MB85RC_I2C::eraseDevice(void) {
 		byte result = 0;
 		uint16_t i = 0;
-		
+
 		#ifdef SERIAL_DEBUG
 			if (Serial){
 				Serial.println("Start erasing device");
 			}
 		#endif
-		
+
 		while((i < maxaddress) && (result == 0)){
 		  result = FRAM_MB85RC_I2C::writeByte(i, 0x00);
 		  i++;
 		}
-		
-	
+
 		#if defined(SERIAL_DEBUG) && (SERIAL_DEBUG == 1)
 			if (Serial){
 				if (result !=0) {
@@ -656,7 +644,7 @@ byte FRAM_MB85RC_I2C::eraseDevice(void) {
 	@param[out]	  The memory densitycode (bytes 11..8)
 				  from 0x03 (64K chip) to 0x07 (1M chip)
 	@param[out]	  The memory density got from density code
-				  from 64 to 1024K			  
+				  from 64 to 1024K
 	@param[out]	  The memory max address of storage slot
     @returns
 				  return code of Wire.endTransmission() or interpreted error.
@@ -666,24 +654,23 @@ byte FRAM_MB85RC_I2C::getDeviceIDs(void)
 {
 	uint8_t localbuffer[3] = { 0, 0, 0 };
 	uint8_t result;
-	
+
 	/* Get device IDs sequence 	*/
 	/* 1/ Send 0xF8 to the I2C bus as a write instruction. bit 0: 0 => 0xF8 >> 1 */
 	/* Send 0xF8 to 12C bus. Bit shift to right as beginTransmission() requires a 7bit. beginTransmission() 0 for write => 0xF8 */
 	/* Send device address as 8 bits. Bit shift to left as we are using a simple write()                                        */
 	/* Send 0xF9 to I2C bus. By requesting 3 bytes to read, requestFrom() add a 1 bit at the end of a 7 bits address => 0xF9    */
 	/* See p.10 of http://www.fujitsu.com/downloads/MICRO/fsa/pdf/products/memory/fram/MB85RC-DS501-00017-3v0-E.pdf             */
-	
-	
+
 	Wire.beginTransmission(MASTER_CODE >> 1);
 	Wire.write((byte)(i2c_addr << 1));
 	result = Wire.endTransmission(false);
- 
+
 	Wire.requestFrom(MASTER_CODE >> 1, 3);
 	localbuffer[0] = (uint8_t) Wire.read();
 	localbuffer[1] = (uint8_t) Wire.read();
 	localbuffer[2] = (uint8_t) Wire.read();
-	
+
 	/* Shift values to separate IDs */
 	manufacturer = (localbuffer[0] << 4) + (localbuffer[1] >> 4);
 	densitycode = (uint16_t)(localbuffer[1] & 0x0F);
@@ -747,7 +734,6 @@ byte FRAM_MB85RC_I2C::getDeviceIDs(void)
 					density = 0; /* means error */
 					maxaddress = 0; /* means error */
 					if (result == 0) result = ERROR_7; /*device unidentified, comminication ok*/
-	
 	}
 
   return result;
@@ -758,9 +744,9 @@ byte FRAM_MB85RC_I2C::getDeviceIDs(void)
     @brief  set devices IDs for chip that does not support the feature as this has not been implemented in every chips by manufacturers
 
     @params[in]   none
-	
+
 	@params[out]  manufacturerID set as "manual mode"
-	
+
 	@param[out]	  The memory max address of storage slot
     @returns
 				  return Error_0, Error_7, ERROR_10 codes
@@ -798,7 +784,7 @@ byte FRAM_MB85RC_I2C::setDeviceIDs(void)
 		densitycode = MANUALMODE_DENSITY_ID;
 		productid = MANUALMODE_PRODUCT_ID;
 		manufacturer = MANUALMODE_MANUFACT_ID;
-		if (maxaddress !=0) { 
+		if (maxaddress !=0) {
 			return ERROR_0;
 		}
 		else {
@@ -811,7 +797,7 @@ byte FRAM_MB85RC_I2C::setDeviceIDs(void)
 }
 /**************************************************************************/
 /*!
-    @brief  Utility function to print out memory chip IDs to serial if Debug enabled 
+    @brief  Utility function to print out memory chip IDs to serial if Debug enabled
 
     @params[in]   SERIAL_DEBUG
 	@param[out]	  none
@@ -822,7 +808,7 @@ byte FRAM_MB85RC_I2C::setDeviceIDs(void)
 /**************************************************************************/
 byte FRAM_MB85RC_I2C::deviceIDs2Serial(void) {
     byte result = ERROR_4;
-	#if defined(SERIAL_DEBUG) && (SERIAL_DEBUG == 1)
+	#ifdef SERIAL_DEBUG
 		if (Serial){
 			Serial.println("FRAM Device IDs");
 			Serial.print("Manufacturer 0x"); Serial.println(manufacturer, HEX);
@@ -878,7 +864,6 @@ byte FRAM_MB85RC_I2C::initWP(boolean wp) {
 			4K chips : 1 MSB of memory address as LSB of device address + 8 bits memory address
 			16K chips : 3 MSB of memory address as LSB of device address + 8 bits memory address
 			64K and more chips : full chipp address & 16 bits memory address
-			
 
     @params[in]  address : memory address
 	@param[out]	 none
@@ -886,9 +871,8 @@ byte FRAM_MB85RC_I2C::initWP(boolean wp) {
 */
 /**************************************************************************/
 void FRAM_MB85RC_I2C::I2CAddressAdapt(uint16_t framAddr) {
-	
 	uint8_t chipaddress;
-	
+
 	switch(density) {
 		case 4:
 			chipaddress = (i2c_addr | ((framAddr >> 8) & 0x1));
@@ -900,12 +884,12 @@ void FRAM_MB85RC_I2C::I2CAddressAdapt(uint16_t framAddr) {
 			chipaddress = i2c_addr;
 			break;
 	}
-	
+
 	#if defined(SERIAL_DEBUG) && (SERIAL_DEBUG == 1)
 		Serial.print("Calculated address 0x");
 		Serial.println(chipaddress, HEX);
 	#endif
-	
+
 	if (density < 64) {
 		Wire.beginTransmission(chipaddress);
 		Wire.write(framAddr & 0xFF);
@@ -913,7 +897,7 @@ void FRAM_MB85RC_I2C::I2CAddressAdapt(uint16_t framAddr) {
 	else {
 		Wire.beginTransmission(chipaddress);
 		Wire.write(framAddr >> 8);
-		Wire.write(framAddr & 0xFF);	
+		Wire.write(framAddr & 0xFF);
 	}
 	return;
 }

@@ -127,39 +127,43 @@
 
 class FRAM_MB85RC_I2C {
 public:
-	FRAM_MB85RC_I2C(void) {
-		_framInitialised = false;
-		_manualMode = false;
-		_i2c_addr = MB85RC_DEFAULT_ADDRESS;
-		_wpPin = DEFAULT_WP_PIN;
-		initWP(DEFAULT_WP_STATUS);
+	// This constructor probes the i2c bus for a device with device IDs implemented
+	FRAM_MB85RC_I2C(uint8_t address = MB85RC_DEFAULT_ADDRESS, bool wp = DEFAULT_WP_STATUS, uint8_t pin = DEFAULT_WP_PIN) :
+		_i2c_addr(address),
+		_framInitialised(false),
+		_manualMode(false),
+		_wpPin(pin)
+	{
+		#if defined(MANAGE_WP) && MANAGE_WP == true
+			pinMode(_wpPin, OUTPUT);
+			if (wp) {
+				enableWP();
+			} else {
+				disableWP();
+			}
+		#else
+			_wpStatus = false;
+		#endif
 	}
 
-	FRAM_MB85RC_I2C(uint8_t address, boolean wp) {
-		_framInitialised = false;
-		_manualMode = false;
-		_i2c_addr = address;
-		_wpPin = DEFAULT_WP_PIN;
-		initWP(wp);
-	}
-
-	FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin) {
-		_framInitialised = false;
-		_manualMode = false;
-		_i2c_addr = address;
-		_wpPin = pin;
-		initWP(wp);
-	}
-
-	FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin, uint16_t chipDensity) {
-		//This constructor provides capability for chips without the device IDs implemented
-		_framInitialised = false;
-		_manualMode = true;
-		_i2c_addr = address;
-		_wpPin = pin;
-		_density = chipDensity;
-
-		FRAM_MB85RC_I2C::initWP(wp);
+	// This constructor provides capability for chips without the device IDs implemented
+	FRAM_MB85RC_I2C(uint8_t address, bool wp, uint8_t pin, uint16_t chipDensity) :
+		_i2c_addr(address),
+		_framInitialised(false),
+		_manualMode(true),
+		_density(chipDensity),
+		_wpPin(pin)
+	{
+		#if defined(MANAGE_WP) && MANAGE_WP == true
+			pinMode(_wpPin, OUTPUT);
+			if (wp) {
+				enableWP();
+			} else {
+				disableWP();
+			}
+		#else
+			_wpStatus = false;
+		#endif
 	}
 
 	void begin(void) {
@@ -836,38 +840,6 @@ public:
 		} else {
 			return ERROR_NOT_PERMITTED;
 		}
-	}
-
-	/**************************************************************************/
-	/*!
-	    @brief  Init write protect function for class constructor
-
-	    @params[in]   MANAGE_WP
-	                  WP management switch defined in header file
-	    @params[in]   _wpPin
-	                  pin number for WP pin
-	    @params[in]   wp
-	                  Boolean for startup WP
-		@param[out]	  _wpStatus
-		@returns
-					  0: success, init done
-					  1: error - should never happen
-	*/
-	/**************************************************************************/
-	byte initWP(boolean wp) {
-		byte result;
-		if (MANAGE_WP) {
-			pinMode(_wpPin, OUTPUT);
-			if (wp) {
-				result = FRAM_MB85RC_I2C::enableWP();
-			} else {
-				result = FRAM_MB85RC_I2C::disableWP();
-			}
-		} else {
-			_wpStatus = false;
-			result = ERROR_SUCCESS;
-		}
-		return result;
 	}
 
 	/**************************************************************************/

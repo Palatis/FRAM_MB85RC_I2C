@@ -394,10 +394,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte readByte (uint16_t framAddr, uint8_t *value) {
-		uint8_t buffer[1];
-		byte result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
-		*value = buffer[0];
-		return result;
+		return readArray(framAddr, sizeof(uint8_t), value);
 	}
 
 	/**************************************************************************/
@@ -415,8 +412,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeByte (uint16_t framAddr, uint8_t value) {
-		uint8_t buffer[] = {value};
-		return FRAM_MB85RC_I2C::writeArray(framAddr, 1, buffer);
+		return writeArray(framAddr, sizeof(uint8_t), &value);
 	}
 
 	/**************************************************************************/
@@ -434,9 +430,9 @@ public:
 	*/
 	/**************************************************************************/
 	byte copyByte (uint16_t origAddr, uint16_t destAddr) {
-		uint8_t buffer[1];
-		byte result = readByte(origAddr, buffer);
-		result = writeByte(destAddr, buffer[0]);
+		uint8_t buffer;
+		byte result = readByte(origAddr, &buffer);
+		result = writeByte(destAddr, buffer);
 		return result;
 	}
 
@@ -453,10 +449,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte readWord(uint16_t framAddr, uint16_t *value) {
-		uint8_t buffer[2];
-		byte result = FRAM_MB85RC_I2C::readArray(framAddr, 2, buffer);
-		*value = *reinterpret_cast<uint16_t *>(buffer);
-		return result;
+		return readArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t *>(value));
 	}
 
 	/**************************************************************************/
@@ -472,8 +465,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeWord(uint16_t framAddr, uint16_t value) {
-		uint8_t *buffer = reinterpret_cast<uint8_t *>(&value);
-		return FRAM_MB85RC_I2C::writeArray(framAddr, 2, buffer);
+		return writeArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t *>(&value));
 	}
 
 	/**************************************************************************/
@@ -489,10 +481,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte readLong(uint16_t framAddr, uint32_t *value) {
-		uint8_t buffer[4];
-		byte result = FRAM_MB85RC_I2C::readArray(framAddr, 4, buffer);
-		*value = *reinterpret_cast<uint32_t *>(buffer);
-		return result;
+		return readArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t *>(value));
 	}
 
 	/**************************************************************************/
@@ -508,8 +497,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeLong(uint16_t framAddr, uint32_t value) {
-		uint8_t *buffer = reinterpret_cast<uint8_t *>(&value);
-		return FRAM_MB85RC_I2C::writeArray(framAddr, 4, buffer);
+		return writeArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t *>(&value));
 	}
 
 	/**************************************************************************/

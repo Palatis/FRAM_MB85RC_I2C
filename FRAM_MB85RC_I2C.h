@@ -946,7 +946,6 @@ public:
 			Wire.write(framAddr >> 8);
 			Wire.write(framAddr & 0xFF);
 		}
-		return;
 	}
 };
 

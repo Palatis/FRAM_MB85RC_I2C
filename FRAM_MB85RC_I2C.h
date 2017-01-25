@@ -57,9 +57,7 @@
 #include <Wire.h>
 
 // Enabling debug I2C - comment to disable / normal operations
-#ifndef SERIAL_DEBUG
-#define SERIAL_DEBUG 1
-#endif
+//#define DEBUB_SERIAL_FRAM_MB85RC_I2C Serial
 
 // IDs
 //Manufacturers codes
@@ -167,29 +165,22 @@ public:
 	void begin(void) {
 		byte deviceFound = FRAM_MB85RC_I2C::checkDevice();
 
-		#if defined(SERIAL_DEBUG) && (SERIAL_DEBUG == 1)
-		if (!Serial) Serial.begin(9600);
-		if (Serial){
-			Serial.println("FRAM_MB85RC_I2C object created");
-			Serial.print("I2C device address 0x");
-			Serial.println(i2c_addr, HEX);
-			Serial.print("WP pin number ");
-			Serial.println(wpPin, DEC);
-			Serial.print("Write protect management: ");
-			if(MANAGE_WP) {
-				Serial.println("true");
-			}
-			else {
-				Serial.println("false");
-			}
-			if(deviceFound == ERROR_SUCCESS) {
-				Serial.println("Memory Chip initialized");
+		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
+		if (DEBUB_SERIAL_FRAM_MB85RC_I2C) {
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("FRAM_MB85RC_I2C object created"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("I2C device address 0x"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(i2c_addr, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("WP pin number "));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(wpPin, DEC);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Write protect management: "));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(MANAGE_WP ? F("true") : F("false"));
+			if (deviceFound == ERROR_SUCCESS) {
+				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Memory Chip initialized"));
 				FRAM_MB85RC_I2C::deviceIDs2Serial();
+			} else {
+				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Memory Chip NOT FOUND"));
 			}
-			else {
-				Serial.println("Memory Chip NOT FOUND");
-			}
-			Serial.println("...... ...... ......");
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("...... ...... ......"));
 		}
 		#endif
 	}
@@ -660,9 +651,9 @@ public:
 		byte result = 0;
 		uint16_t i = 0;
 
-		#ifdef SERIAL_DEBUG
-		if (Serial)
-			Serial.println("Start erasing device");
+		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
+		if (DEBUB_SERIAL_FRAM_MB85RC_I2C)
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Start erasing device"));
 		#endif
 
 		while((i < maxaddress) && (result == 0)) {
@@ -670,14 +661,14 @@ public:
 			i++;
 		}
 
-		#if defined(SERIAL_DEBUG) && (SERIAL_DEBUG == 1)
-		if (Serial && result !=0) {
-			Serial.print("ERROR: device erasing stopped at position ");
-			Serial.println(i, DEC);
-			Serial.println("...... ...... ......");
+		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
+		if (DEBUB_SERIAL_FRAM_MB85RC_I2C && result != 0) {
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("ERROR: device erasing stopped at position "));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(i, DEC);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("...... ...... ......"));
 		} else {
-			Serial.println("device erased");
-			Serial.println("...... ...... ......");
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("device erased"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("...... ...... ......"));
 		}
 		#endif
 		return result;
@@ -901,16 +892,23 @@ public:
 	/**************************************************************************/
 	byte deviceIDs2Serial(void) {
 		byte result = ERROR_SERIAL_UNAVAILABLE;
-		#ifdef SERIAL_DEBUG
-		if (Serial){
-			Serial.println("FRAM Device IDs");
-			Serial.print("Manufacturer 0x"); Serial.println(manufacturer, HEX);
-			Serial.print("ProductID 0x"); Serial.println(productid, HEX);
-			Serial.print("Density code 0x"); Serial.println(densitycode, HEX);
-			Serial.print("Density "); Serial.print(density, DEC); Serial.println("K");
-			if ((manufacturer != MANUALMODE_MANUFACT_ID) && (density > 0))  Serial.println("Device identfied automatically");
-			if ((manufacturer == MANUALMODE_MANUFACT_ID) && (density > 0))  Serial.println("Device properties set");
-			Serial.println("...... ...... ......");
+		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
+		if (DEBUB_SERIAL_FRAM_MB85RC_I2C){
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("FRAM Device IDs"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Manufacturer 0x"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(manufacturer, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("ProductID 0x"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(productid, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Density code 0x"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(densitycode, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Density "));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(density, DEC);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println('K');
+			if ((manufacturer != MANUALMODE_MANUFACT_ID) && (density > 0))
+				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Device identfied automatically"));
+			if ((manufacturer == MANUALMODE_MANUFACT_ID) && (density > 0))
+				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Device properties set"));
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("...... ...... ......"));
 			result = ERROR_SUCCESS;
 		}
 		#endif
@@ -944,9 +942,9 @@ public:
 			break;
 		}
 
-		#if defined(SERIAL_DEBUG) && (SERIAL_DEBUG == 1)
-		Serial.print("Calculated address 0x");
-		Serial.println(chipaddress, HEX);
+		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
+		DEBUB_SERIAL_FRAM_MB85RC_I2C.print("Calculated address 0x");
+		DEBUB_SERIAL_FRAM_MB85RC_I2C.println(chipaddress, HEX);
 		#endif
 
 		if (density < 64) {

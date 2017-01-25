@@ -132,7 +132,7 @@ public:
 		_manualMode = false;
 		i2c_addr = MB85RC_DEFAULT_ADDRESS;
 		wpPin = DEFAULT_WP_PIN;
-		byte result = FRAM_MB85RC_I2C::initWP(DEFAULT_WP_STATUS);
+		initWP(DEFAULT_WP_STATUS);
 	}
 
 	FRAM_MB85RC_I2C(uint8_t address, boolean wp) {
@@ -140,7 +140,7 @@ public:
 		_manualMode = false;
 		i2c_addr = address;
 		wpPin = DEFAULT_WP_PIN;
-		byte result = FRAM_MB85RC_I2C::initWP(wp);
+		initWP(wp);
 	}
 
 	FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin) {
@@ -148,7 +148,7 @@ public:
 		_manualMode = false;
 		i2c_addr = address;
 		wpPin = pin;
-		byte result = FRAM_MB85RC_I2C::initWP(wp);
+		initWP(wp);
 	}
 
 	FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin, uint16_t chipDensity) {
@@ -159,11 +159,14 @@ public:
 		wpPin = pin;
 		density = chipDensity;
 
-		byte result = FRAM_MB85RC_I2C::initWP(wp);
+		FRAM_MB85RC_I2C::initWP(wp);
 	}
 
 	void begin(void) {
-		byte deviceFound = FRAM_MB85RC_I2C::checkDevice();
+		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
+		byte deviceFound =
+		#endif
+			FRAM_MB85RC_I2C::checkDevice();
 
 		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
 		if (DEBUB_SERIAL_FRAM_MB85RC_I2C) {
@@ -678,11 +681,11 @@ public:
 	uint8_t	i2c_addr;
 	boolean	_framInitialised;
 	boolean	_manualMode;
-	uint16_t	manufacturer;
-	uint16_t	productid;
-	uint16_t	densitycode;
-	uint16_t	density;
-	uint16_t	maxaddress;
+	uint16_t manufacturer;
+	uint16_t productid;
+	uint16_t densitycode;
+	uint16_t density;
+	uint32_t maxaddress;
 
 	int	wpPin;
 	boolean	wpStatus;

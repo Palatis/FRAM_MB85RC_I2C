@@ -114,18 +114,18 @@
 #define DEFAULT_WP_STATUS  false //false means protection is off - write is enabled
 
 // Error management
-#define ERROR_0 0 // Success
-#define ERROR_1 1 // Data too long to fit the transmission buffer on Arduino
-#define ERROR_2 2 // received NACK on transmit of address
-#define ERROR_3 3 // received NACK on transmit of data
-#define ERROR_4 4 // Serial seems not available
-#define ERROR_5 5 // Not referenced device ID
-#define ERROR_6 6 // Unused
-#define ERROR_7 6 // Fram chip unidentified
-#define ERROR_8 8 // Number of bytes asked to read null
-#define ERROR_9 9 // Bit position out of range
-#define ERROR_10 10 // Not permitted opération
-#define ERROR_11 11 // Memory address out of range
+#define ERROR_SUCCESS				0 // Success
+#define ERROR_OUT_OF_RANGE			1 // Data too long to fit the transmission buffer on Arduino
+#define ERROR_NACK_ON_ADDRESS		2 // received NACK on transmit of address
+#define ERROR_NACK_ON_DATA			3 // received NACK on transmit of data
+#define ERROR_SERIAL_UNAVAILABLE	4 // Serial seems not available
+#define ERROR_DEVICE_ID				5 // Not referenced device ID
+#define ERROR_UNUSED				6 // Unused
+#define ERROR_CHIP_UNIDENTIFIED		7 // Fram chip unidentified
+#define ERROR_TOO_SHORT				8 // Number of bytes asked to read null
+#define ERROR_INVALID_BIT_POS		9 // Bit position out of range
+#define ERROR_NOT_PERMITTED			10 // Not permitted operation
+#define ERROR_OUT_OF_RANGE1			11 // Memory address out of range
 
 class FRAM_MB85RC_I2C {
 public:
@@ -182,7 +182,7 @@ public:
 			else {
 				Serial.println("false");
 			}
-			if(deviceFound == ERROR_0) {
+			if(deviceFound == ERROR_SUCCESS) {
 				Serial.println("Memory Chip initialized");
 				FRAM_MB85RC_I2C::deviceIDs2Serial();
 			}
@@ -209,10 +209,10 @@ public:
 			result = getDeviceIDs();
 		}
 
-		if ((result == ERROR_0) && ((manufacturer == FUJITSU_MANUFACT_ID) || (manufacturer == CYPRESS_MANUFACT_ID) || (manufacturer == MANUALMODE_MANUFACT_ID)) && (maxaddress != 0)) {
+		if ((result == ERROR_SUCCESS) && ((manufacturer == FUJITSU_MANUFACT_ID) || (manufacturer == CYPRESS_MANUFACT_ID) || (manufacturer == MANUALMODE_MANUFACT_ID)) && (maxaddress != 0)) {
 			_framInitialised = true;
 		} else {
-			result = ERROR_7;
+			result = ERROR_CHIP_UNIDENTIFIED;
 			_framInitialised = false;
 		}
 		return result;
@@ -236,7 +236,7 @@ public:
 	byte readBit(uint16_t framAddr, uint8_t bitNb, byte *bit) {
 		byte result;
 		if (bitNb > 7) {
-			result = ERROR_9;
+			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
 			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
@@ -261,7 +261,7 @@ public:
 	byte setOneBit(uint16_t framAddr, uint8_t bitNb) {
 		byte result;
 		if (bitNb > 7)  {
-			result = ERROR_9;
+			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
 			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
@@ -287,7 +287,7 @@ public:
 	byte clearOneBit(uint16_t framAddr, uint8_t bitNb) {
 		byte result;
 		if (bitNb > 7) {
-			result = ERROR_9;
+			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
 			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
@@ -313,7 +313,7 @@ public:
 	byte toggleBit(uint16_t framAddr, uint8_t bitNb) {
 		byte result;
 		if (bitNb > 7) {
-			result = ERROR_9;
+			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
 			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
@@ -345,10 +345,10 @@ public:
 	*/
 	/**************************************************************************/
 	byte readArray (uint16_t framAddr, byte items, uint8_t values[]) {
-		if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_11;
+		if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_OUT_OF_RANGE1;
 		byte result;
 		if (items == 0) {
-			result = ERROR_8; //number of bytes asked to read null
+			result = ERROR_TOO_SHORT; //number of bytes asked to read null
 		} else {
 			FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
 			result = Wire.endTransmission();
@@ -377,7 +377,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeArray (uint16_t framAddr, byte items, uint8_t values[]) {
-		if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_11;
+		if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_OUT_OF_RANGE1;
 		FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
 		for (byte i=0; i < items ; i++) {
 			Wire.write(values[i]);
@@ -541,23 +541,23 @@ public:
 		switch (idType) {
 		case manuf:
 			*id = manufacturer;
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 			break;
 		case prod:
 			*id = productid;
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 			break;
 		case densc:
 			*id = densitycode;
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 			break;
 		case densi:
 			*id = density;
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 			break;
 		default:
 			*id = 0;
-			result = ERROR_5;
+			result = ERROR_DEVICE_ID;
 			break;
 		}
 		return result;
@@ -612,9 +612,9 @@ public:
 		if (MANAGE_WP) {
 			digitalWrite(wpPin,HIGH);
 			wpStatus = true;
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 		} else {
-			result = ERROR_10;
+			result = ERROR_NOT_PERMITTED;
 		}
 		return result;
 	}
@@ -638,9 +638,9 @@ public:
 		if (MANAGE_WP) {
 			digitalWrite(wpPin,LOW);
 			wpStatus = false;
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 		} else {
-			result = ERROR_10;
+			result = ERROR_NOT_PERMITTED;
 		}
 		return result;
 	}
@@ -766,7 +766,7 @@ public:
 			default:
 				density = 0; /* means error */
 				maxaddress = 0; /* means error */
-				if (result == 0) result = ERROR_7; /*device unidentified, comminication ok*/
+				if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
 				break;
 			}
 		} else if (manufacturer == CYPRESS_MANUFACT_ID) {
@@ -790,13 +790,13 @@ public:
 			default:
 				density = 0; /* means error */
 				maxaddress = 0; /* means error */
-				if (result == 0) result = ERROR_7; /*device unidentified, comminication ok*/
+				if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
 				break;
 			}
 		} else {
 			density = 0; /* means error */
 			maxaddress = 0; /* means error */
-			if (result == 0) result = ERROR_7; /*device unidentified, comminication ok*/
+			if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
 		}
 
 		return result;
@@ -812,7 +812,7 @@ public:
 
 		@param[out]	  The memory max address of storage slot
 	    @returns
-					  return Error_0, Error_7, ERROR_10 codes
+					  return ERROR_SUCCESS, ERROR_CHIP_UNIDENTIFIED, ERROR_NOT_PERMITTED codes
 	*/
 	/**************************************************************************/
 	byte setDeviceIDs(void) {
@@ -847,12 +847,12 @@ public:
 			productid = MANUALMODE_PRODUCT_ID;
 			manufacturer = MANUALMODE_MANUFACT_ID;
 			if (maxaddress !=0) {
-				return ERROR_0;
+				return ERROR_SUCCESS;
 			} else {
-				return ERROR_7;
+				return ERROR_CHIP_UNIDENTIFIED;
 			}
 		} else {
-			return ERROR_10;
+			return ERROR_NOT_PERMITTED;
 		}
 	}
 
@@ -883,7 +883,7 @@ public:
 			}
 		} else {
 			wpStatus = false;
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 		}
 		return result;
 	}
@@ -900,7 +900,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte deviceIDs2Serial(void) {
-		byte result = ERROR_4;
+		byte result = ERROR_SERIAL_UNAVAILABLE;
 		#ifdef SERIAL_DEBUG
 		if (Serial){
 			Serial.println("FRAM Device IDs");
@@ -911,7 +911,7 @@ public:
 			if ((manufacturer != MANUALMODE_MANUFACT_ID) && (density > 0))  Serial.println("Device identfied automatically");
 			if ((manufacturer == MANUALMODE_MANUFACT_ID) && (density > 0))  Serial.println("Device properties set");
 			Serial.println("...... ...... ......");
-			result = ERROR_0;
+			result = ERROR_SUCCESS;
 		}
 		#endif
 		return result;

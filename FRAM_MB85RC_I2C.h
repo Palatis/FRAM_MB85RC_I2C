@@ -130,24 +130,24 @@ public:
 	FRAM_MB85RC_I2C(void) {
 		_framInitialised = false;
 		_manualMode = false;
-		i2c_addr = MB85RC_DEFAULT_ADDRESS;
-		wpPin = DEFAULT_WP_PIN;
+		_i2c_addr = MB85RC_DEFAULT_ADDRESS;
+		_wpPin = DEFAULT_WP_PIN;
 		initWP(DEFAULT_WP_STATUS);
 	}
 
 	FRAM_MB85RC_I2C(uint8_t address, boolean wp) {
 		_framInitialised = false;
 		_manualMode = false;
-		i2c_addr = address;
-		wpPin = DEFAULT_WP_PIN;
+		_i2c_addr = address;
+		_wpPin = DEFAULT_WP_PIN;
 		initWP(wp);
 	}
 
 	FRAM_MB85RC_I2C(uint8_t address, boolean wp, int pin) {
 		_framInitialised = false;
 		_manualMode = false;
-		i2c_addr = address;
-		wpPin = pin;
+		_i2c_addr = address;
+		_wpPin = pin;
 		initWP(wp);
 	}
 
@@ -155,9 +155,9 @@ public:
 		//This constructor provides capability for chips without the device IDs implemented
 		_framInitialised = false;
 		_manualMode = true;
-		i2c_addr = address;
-		wpPin = pin;
-		density = chipDensity;
+		_i2c_addr = address;
+		_wpPin = pin;
+		_density = chipDensity;
 
 		FRAM_MB85RC_I2C::initWP(wp);
 	}
@@ -172,9 +172,9 @@ public:
 		if (DEBUB_SERIAL_FRAM_MB85RC_I2C) {
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("FRAM_MB85RC_I2C object created"));
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("I2C device address 0x"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(i2c_addr, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_i2c_addr, HEX);
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("WP pin number "));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(wpPin, DEC);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_wpPin, DEC);
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Write protect management: "));
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(MANAGE_WP ? F("true") : F("false"));
 			if (deviceFound == ERROR_SUCCESS) {
@@ -190,7 +190,7 @@ public:
 
 	/**************************************************************************/
 	/*!
-	    Check if device is connected at address @i2c_addr
+	    Check if device is connected at address @_i2c_addr
 		returns 0 = device found
 				7 = device not found
 	*/
@@ -203,7 +203,7 @@ public:
 			result = getDeviceIDs();
 		}
 
-		if ((result == ERROR_SUCCESS) && ((manufacturer == FUJITSU_MANUFACT_ID) || (manufacturer == CYPRESS_MANUFACT_ID) || (manufacturer == MANUALMODE_MANUFACT_ID)) && (maxaddress != 0)) {
+		if ((result == ERROR_SUCCESS) && ((_manufacturer == FUJITSU_MANUFACT_ID) || (_manufacturer == CYPRESS_MANUFACT_ID) || (_manufacturer == MANUALMODE_MANUFACT_ID)) && (_maxaddress != 0)) {
 			_framInitialised = true;
 		} else {
 			result = ERROR_CHIP_UNIDENTIFIED;
@@ -339,14 +339,14 @@ public:
 	*/
 	/**************************************************************************/
 	byte readArray (uint16_t framAddr, byte items, uint8_t values[]) {
-		if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_OUT_OF_RANGE1;
+		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress)) return ERROR_OUT_OF_RANGE1;
 		byte result;
 		if (items == 0) {
 			result = ERROR_TOO_SHORT; //number of bytes asked to read null
 		} else {
 			FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
 			result = Wire.endTransmission();
-			Wire.requestFrom(i2c_addr, (uint8_t)items);
+			Wire.requestFrom(_i2c_addr, (uint8_t)items);
 			for (byte i=0; i < items; i++) {
 				values[i] = Wire.read();
 			}
@@ -371,7 +371,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeArray (uint16_t framAddr, byte items, uint8_t values[]) {
-		if ((framAddr >= maxaddress) || ((framAddr + (uint16_t) items - 1) >= maxaddress)) return ERROR_OUT_OF_RANGE1;
+		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress)) return ERROR_OUT_OF_RANGE1;
 		FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
 		for (byte i=0; i < items ; i++) {
 			Wire.write(values[i]);
@@ -505,7 +505,7 @@ public:
 	    @brief  Reads the Manufacturer ID and the Product ID frm the IC
 
 	    @params[in]   idtype
-					  1: Manufacturer ID, 2: ProductID, 3:density code, 4:density
+					  1: Manufacturer ID, 2: ProductID, 3:_density code, 4:_density
 		@params[out]  *id
 	                  The 16 bits ID value
 	    @returns
@@ -522,19 +522,19 @@ public:
 
 		switch (idType) {
 		case manuf:
-			*id = manufacturer;
+			*id = _manufacturer;
 			result = ERROR_SUCCESS;
 			break;
 		case prod:
-			*id = productid;
+			*id = _productid;
 			result = ERROR_SUCCESS;
 			break;
 		case densc:
-			*id = densitycode;
+			*id = _densitycode;
 			result = ERROR_SUCCESS;
 			break;
 		case densi:
-			*id = density;
+			*id = _density;
 			result = ERROR_SUCCESS;
 			break;
 		default:
@@ -572,7 +572,7 @@ public:
 	*/
 	/**************************************************************************/
 	boolean	getWPStatus(void) {
-		return wpStatus;
+		return _wpStatus;
 	}
 
 	/**************************************************************************/
@@ -581,9 +581,9 @@ public:
 
 	    @params[in]   MANAGE_WP
 	                  WP management switch defined in header file
-	    @params[in]   wpPin
+	    @params[in]   _wpPin
 	                  pin number for WP pin
-		@param[out]	  wpStatus
+		@param[out]	  _wpStatus
 		@returns
 					  0: success
 					  1: error, WP not managed
@@ -592,8 +592,8 @@ public:
 	byte enableWP(void) {
 		byte result;
 		if (MANAGE_WP) {
-			digitalWrite(wpPin,HIGH);
-			wpStatus = true;
+			digitalWrite(_wpPin,HIGH);
+			_wpStatus = true;
 			result = ERROR_SUCCESS;
 		} else {
 			result = ERROR_NOT_PERMITTED;
@@ -618,8 +618,8 @@ public:
 	byte disableWP(void) {
 		byte result;
 		if (MANAGE_WP) {
-			digitalWrite(wpPin,LOW);
-			wpStatus = false;
+			digitalWrite(_wpPin,LOW);
+			_wpStatus = false;
 			result = ERROR_SUCCESS;
 		} else {
 			result = ERROR_NOT_PERMITTED;
@@ -647,7 +647,7 @@ public:
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Start erasing device"));
 		#endif
 
-		while((i < maxaddress) && (result == 0)) {
+		while((i < _maxaddress) && (result == 0)) {
 			result = FRAM_MB85RC_I2C::writeByte(i, 0x00);
 			i++;
 		}
@@ -666,17 +666,17 @@ public:
 	}
 
  private:
-	uint8_t	i2c_addr;
+	uint8_t	_i2c_addr;
 	boolean	_framInitialised;
 	boolean	_manualMode;
-	uint16_t manufacturer;
-	uint16_t productid;
-	uint16_t densitycode;
-	uint16_t density;
-	uint32_t maxaddress;
+	uint16_t _manufacturer;
+	uint16_t _productid;
+	uint16_t _densitycode;
+	uint16_t _density;
+	uint32_t _maxaddress;
 
-	int	wpPin;
-	boolean	wpStatus;
+	uint8_t	_wpPin;
+	boolean	_wpStatus;
 
 	/**************************************************************************/
 	/*!
@@ -710,7 +710,7 @@ public:
 		/* See p.10 of http://www.fujitsu.com/downloads/MICRO/fsa/pdf/products/memory/fram/MB85RC-DS501-00017-3v0-E.pdf             */
 
 		Wire.beginTransmission(MASTER_CODE >> 1);
-		Wire.write((byte)(i2c_addr << 1));
+		Wire.write((byte)(_i2c_addr << 1));
 		result = Wire.endTransmission(false);
 
 		Wire.requestFrom(MASTER_CODE >> 1, 3);
@@ -719,65 +719,65 @@ public:
 		localbuffer[2] = (uint8_t) Wire.read();
 
 		/* Shift values to separate IDs */
-		manufacturer = (localbuffer[0] << 4) + (localbuffer[1] >> 4);
-		densitycode = (uint16_t)(localbuffer[1] & 0x0F);
-		productid = ((localbuffer[1] & 0x0F) << 8) + localbuffer[2];
+		_manufacturer = (localbuffer[0] << 4) + (localbuffer[1] >> 4);
+		_densitycode = (uint16_t)(localbuffer[1] & 0x0F);
+		_productid = ((localbuffer[1] & 0x0F) << 8) + localbuffer[2];
 
-		if (manufacturer == FUJITSU_MANUFACT_ID) {
-			switch (densitycode) {
+		if (_manufacturer == FUJITSU_MANUFACT_ID) {
+			switch (_densitycode) {
 			case DENSITY_MB85RC04V:
-				density = 4;
-				maxaddress = MAXADDRESS_04;
+				_density = 4;
+				_maxaddress = MAXADDRESS_04;
 				break;
 			case DENSITY_MB85RC64TA:
-				density = 64;
-				maxaddress = MAXADDRESS_64;
+				_density = 64;
+				_maxaddress = MAXADDRESS_64;
 				break;
 			case DENSITY_MB85RC256V:
-				density = 256;
-				maxaddress = MAXADDRESS_256;
+				_density = 256;
+				_maxaddress = MAXADDRESS_256;
 				break;
 			case DENSITY_MB85RC512T:
-				density = 512;
-				maxaddress = MAXADDRESS_512;
+				_density = 512;
+				_maxaddress = MAXADDRESS_512;
 				break;
 			case DENSITY_MB85RC1MT:
-				density = 1024;
-				maxaddress = MAXADDRESS_1024;
+				_density = 1024;
+				_maxaddress = MAXADDRESS_1024;
 				break;
 			default:
-				density = 0; /* means error */
-				maxaddress = 0; /* means error */
+				_density = 0; /* means error */
+				_maxaddress = 0; /* means error */
 				if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
 				break;
 			}
-		} else if (manufacturer == CYPRESS_MANUFACT_ID) {
-			switch (densitycode) {
+		} else if (_manufacturer == CYPRESS_MANUFACT_ID) {
+			switch (_densitycode) {
 			case DENSITY_CY15B128J:
-				density = 128;
-				maxaddress = MAXADDRESS_128;
+				_density = 128;
+				_maxaddress = MAXADDRESS_128;
 				break;
 			case DENSITY_CY15B256J:
-				density = 256;
-				maxaddress = MAXADDRESS_256;
+				_density = 256;
+				_maxaddress = MAXADDRESS_256;
 				break;
 			case DENSITY_FM24V05:
-				density = 512;
-				maxaddress = MAXADDRESS_512;
+				_density = 512;
+				_maxaddress = MAXADDRESS_512;
 				break;
 			case DENSITY_FM24V10:
-				density = 1024;
-				maxaddress = MAXADDRESS_1024;
+				_density = 1024;
+				_maxaddress = MAXADDRESS_1024;
 				break;
 			default:
-				density = 0; /* means error */
-				maxaddress = 0; /* means error */
+				_density = 0; /* means error */
+				_maxaddress = 0; /* means error */
 				if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
 				break;
 			}
 		} else {
-			density = 0; /* means error */
-			maxaddress = 0; /* means error */
+			_density = 0; /* means error */
+			_maxaddress = 0; /* means error */
 			if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
 		}
 
@@ -799,36 +799,36 @@ public:
 	/**************************************************************************/
 	byte setDeviceIDs(void) {
 		if(_manualMode) {
-			switch(density) {
+			switch(_density) {
 				case 4:
-					maxaddress = MAXADDRESS_04;
+					_maxaddress = MAXADDRESS_04;
 					break;
 				case 16:
-					maxaddress = MAXADDRESS_16;
+					_maxaddress = MAXADDRESS_16;
 					break;
 				case 64:
-					maxaddress = MAXADDRESS_64;
+					_maxaddress = MAXADDRESS_64;
 					break;
 				case 128:
-					maxaddress = MAXADDRESS_128;
+					_maxaddress = MAXADDRESS_128;
 					break;
 				case 256:
-					maxaddress = MAXADDRESS_256;
+					_maxaddress = MAXADDRESS_256;
 					break;
 				case 512:
-					maxaddress = MAXADDRESS_512;
+					_maxaddress = MAXADDRESS_512;
 					break;
 				case 1024:
-					maxaddress = MAXADDRESS_1024;
+					_maxaddress = MAXADDRESS_1024;
 					break;
 				default:
-					maxaddress = 0; /* means error */
+					_maxaddress = 0; /* means error */
 					break;
 			}
-			densitycode = MANUALMODE_DENSITY_ID;
-			productid = MANUALMODE_PRODUCT_ID;
-			manufacturer = MANUALMODE_MANUFACT_ID;
-			if (maxaddress !=0) {
+			_densitycode = MANUALMODE_DENSITY_ID;
+			_productid = MANUALMODE_PRODUCT_ID;
+			_manufacturer = MANUALMODE_MANUFACT_ID;
+			if (_maxaddress !=0) {
 				return ERROR_SUCCESS;
 			} else {
 				return ERROR_CHIP_UNIDENTIFIED;
@@ -844,11 +844,11 @@ public:
 
 	    @params[in]   MANAGE_WP
 	                  WP management switch defined in header file
-	    @params[in]   wpPin
+	    @params[in]   _wpPin
 	                  pin number for WP pin
 	    @params[in]   wp
 	                  Boolean for startup WP
-		@param[out]	  wpStatus
+		@param[out]	  _wpStatus
 		@returns
 					  0: success, init done
 					  1: error - should never happen
@@ -857,14 +857,14 @@ public:
 	byte initWP(boolean wp) {
 		byte result;
 		if (MANAGE_WP) {
-			pinMode(wpPin, OUTPUT);
+			pinMode(_wpPin, OUTPUT);
 			if (wp) {
 				result = FRAM_MB85RC_I2C::enableWP();
 			} else {
 				result = FRAM_MB85RC_I2C::disableWP();
 			}
 		} else {
-			wpStatus = false;
+			_wpStatus = false;
 			result = ERROR_SUCCESS;
 		}
 		return result;
@@ -887,17 +887,17 @@ public:
 		if (DEBUB_SERIAL_FRAM_MB85RC_I2C){
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("FRAM Device IDs"));
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Manufacturer 0x"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(manufacturer, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_manufacturer, HEX);
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("ProductID 0x"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(productid, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_productid, HEX);
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Density code 0x"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(densitycode, HEX);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_densitycode, HEX);
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Density "));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(density, DEC);
+			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(_density, DEC);
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println('K');
-			if ((manufacturer != MANUALMODE_MANUFACT_ID) && (density > 0))
+			if ((_manufacturer != MANUALMODE_MANUFACT_ID) && (_density > 0))
 				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Device identfied automatically"));
-			if ((manufacturer == MANUALMODE_MANUFACT_ID) && (density > 0))
+			if ((_manufacturer == MANUALMODE_MANUFACT_ID) && (_density > 0))
 				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Device properties set"));
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("...... ...... ......"));
 			result = ERROR_SUCCESS;
@@ -921,15 +921,15 @@ public:
 	void I2CAddressAdapt(uint16_t framAddr) {
 		uint8_t chipaddress;
 
-		switch(density) {
+		switch(_density) {
 		case 4:
-			chipaddress = (i2c_addr | ((framAddr >> 8) & 0x1));
+			chipaddress = (_i2c_addr | ((framAddr >> 8) & 0x1));
 			break;
 		case 16:
-			chipaddress = (i2c_addr | ((framAddr >> 8) & 0x7));
+			chipaddress = (_i2c_addr | ((framAddr >> 8) & 0x7));
 			break;
 		default:
-			chipaddress = i2c_addr;
+			chipaddress = _i2c_addr;
 			break;
 		}
 
@@ -938,7 +938,7 @@ public:
 		DEBUB_SERIAL_FRAM_MB85RC_I2C.println(chipaddress, HEX);
 		#endif
 
-		if (density < 64) {
+		if (_density < 64) {
 			Wire.beginTransmission(chipaddress);
 			Wire.write(framAddr & 0xFF);
 		} else {

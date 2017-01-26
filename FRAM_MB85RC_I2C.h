@@ -159,7 +159,7 @@ public:
 		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
 		byte deviceFound =
 		#endif
-			FRAM_MB85RC_I2C::checkDevice();
+			checkDevice();
 
 		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
 		if (DEBUB_SERIAL_FRAM_MB85RC_I2C) {
@@ -172,7 +172,7 @@ public:
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(MANAGE_WP ? F("true") : F("false"));
 			if (deviceFound == ERROR_SUCCESS) {
 				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Memory Chip initialized"));
-				FRAM_MB85RC_I2C::deviceIDs2Serial();
+				deviceIDs2Serial();
 			} else {
 				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Memory Chip NOT FOUND"));
 			}
@@ -226,7 +226,7 @@ public:
 			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
-			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
+			result = readArray(framAddr, 1, buffer);
 			*bit = bitRead(buffer[0], bitNb);
 		}
 		return result;
@@ -251,9 +251,9 @@ public:
 			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
-			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
+			result = readArray(framAddr, 1, buffer);
 			bitSet(buffer[0], bitNb);
-			result = FRAM_MB85RC_I2C::writeArray(framAddr, 1, buffer);
+			result = writeArray(framAddr, 1, buffer);
 		}
 		return result;
 	}
@@ -277,9 +277,9 @@ public:
 			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
-			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
+			result = readArray(framAddr, 1, buffer);
 			bitClear(buffer[0], bitNb);
-			result = FRAM_MB85RC_I2C::writeArray(framAddr, 1, buffer);
+			result = writeArray(framAddr, 1, buffer);
 		}
 		return result;
 	}
@@ -303,14 +303,14 @@ public:
 			result = ERROR_INVALID_BIT_POS;
 		} else {
 			uint8_t buffer[1];
-			result = FRAM_MB85RC_I2C::readArray(framAddr, 1, buffer);
+			result = readArray(framAddr, 1, buffer);
 
 			if ( (buffer[0] & (1 << bitNb)) == (1 << bitNb) ) {
 				bitClear(buffer[0], bitNb);
 			} else {
 				bitSet(buffer[0], bitNb);
 			}
-			result = FRAM_MB85RC_I2C::writeArray(framAddr, 1, buffer);
+			result = writeArray(framAddr, 1, buffer);
 		}
 		return result;
 	}
@@ -337,7 +337,7 @@ public:
 		if (items == 0) {
 			result = ERROR_TOO_SHORT; //number of bytes asked to read null
 		} else {
-			FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
+			I2CAddressAdapt(framAddr);
 			result = Wire.endTransmission();
 			Wire.requestFrom(_i2c_addr, (uint8_t)items);
 			for (byte i=0; i < items; i++) {
@@ -365,7 +365,7 @@ public:
 	/**************************************************************************/
 	byte writeArray (uint16_t framAddr, byte items, uint8_t values[]) {
 		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress)) return ERROR_OUT_OF_RANGE1;
-		FRAM_MB85RC_I2C::I2CAddressAdapt(framAddr);
+		I2CAddressAdapt(framAddr);
 		for (byte i=0; i < items ; i++) {
 			Wire.write(values[i]);
 		}
@@ -641,7 +641,7 @@ public:
 		#endif
 
 		while((i < _maxaddress) && (result == 0)) {
-			result = FRAM_MB85RC_I2C::writeByte(i, 0x00);
+			result = writeByte(i, 0x00);
 			i++;
 		}
 

@@ -319,6 +319,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte readByte (uint16_t framAddr, uint8_t *value) {
 		return readArray(framAddr, sizeof(uint8_t), value);
 	}
@@ -337,6 +338,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte writeByte (uint16_t framAddr, uint8_t value) {
 		return writeArray(framAddr, sizeof(uint8_t), &value);
 	}
@@ -374,6 +376,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte readWord(uint16_t framAddr, uint16_t *value) {
 		return readArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t *>(value));
 	}
@@ -390,6 +393,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte writeWord(uint16_t framAddr, uint16_t value) {
 		return writeArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t *>(&value));
 	}
@@ -406,6 +410,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte readLong(uint16_t framAddr, uint32_t *value) {
 		return readArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t *>(value));
 	}
@@ -422,6 +427,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte writeLong(uint16_t framAddr, uint32_t value) {
 		return writeArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t *>(&value));
 	}
@@ -482,6 +488,7 @@ public:
 					  false : not ready
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	boolean	isReady(void) {
 		return _framInitialised;
 	}
@@ -496,6 +503,7 @@ public:
 					  false: wirte protect disabled
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	boolean	getWPStatus(void) {
 		return _wp.status();
 	}
@@ -509,6 +517,7 @@ public:
 					1: error, WP not managed
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte enableWP(void) {
 		return _wp.enable();
 	}
@@ -522,6 +531,7 @@ public:
 					  1: error, WP not managed
 	*/
 	/**************************************************************************/
+	__attribute__ ((always_inline)) inline
 	byte disableWP(void) {
 		return _wp.disable();
 	}

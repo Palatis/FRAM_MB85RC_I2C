@@ -134,16 +134,6 @@ public:
 		_manualMode(false),
 		_wpPin(pin)
 	{
-		#if defined(MANAGE_WP) && MANAGE_WP == true
-			pinMode(_wpPin, OUTPUT);
-			if (wp) {
-				enableWP();
-			} else {
-				disableWP();
-			}
-		#else
-			_wpStatus = false;
-		#endif
 	}
 
 	// This constructor provides capability for chips without the device IDs implemented
@@ -154,19 +144,18 @@ public:
 		_density(chipDensity),
 		_wpPin(pin)
 	{
-		#if defined(MANAGE_WP) && MANAGE_WP == true
-			pinMode(_wpPin, OUTPUT);
-			if (wp) {
-				enableWP();
-			} else {
-				disableWP();
-			}
-		#else
-			_wpStatus = false;
-		#endif
 	}
 
 	void begin(void) {
+		#if defined(MANAGE_WP) && MANAGE_WP == true
+		pinMode(_wpPin, OUTPUT);
+		if (wp) {
+			enableWP();
+		} else {
+			disableWP();
+		}
+		#endif
+
 		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
 		byte deviceFound =
 		#endif

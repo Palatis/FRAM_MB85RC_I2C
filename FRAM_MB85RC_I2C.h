@@ -57,6 +57,7 @@
 #include <Wire.h>
 
 #include "FRAM_defines.h"
+#include "WriteProtectManagers.h"
 
 // Enabling debug I2C - comment to disable / normal operations
 //#define DEBUB_SERIAL_FRAM_MB85RC_I2C Serial
@@ -66,36 +67,30 @@
 #define DEFAULT_WP_PIN	13 //write protection pin - active high, write enabled when low
 #define DEFAULT_WP_STATUS  false //false means protection is off - write is enabled
 
-class FRAM_MB85RC_I2C {
+template < typename WriteProtectT >
+class FRAM_MB85RC_I2C_T {
 public:
 	// This constructor probes the i2c bus for a device with device IDs implemented
-	FRAM_MB85RC_I2C(uint8_t address = MB85RC_DEFAULT_ADDRESS, bool wp = DEFAULT_WP_STATUS, uint8_t pin = DEFAULT_WP_PIN) :
+	FRAM_MB85RC_I2C_T(uint8_t address = MB85RC_DEFAULT_ADDRESS, bool wp = DEFAULT_WP_STATUS, uint8_t pin = DEFAULT_WP_PIN) :
 		_i2c_addr(address),
 		_framInitialised(false),
 		_manualMode(false),
-		_wpPin(pin)
+		_wp(wp, pin)
 	{
 	}
 
 	// This constructor provides capability for chips without the device IDs implemented
-	FRAM_MB85RC_I2C(uint8_t address, bool wp, uint8_t pin, uint16_t chipDensity) :
+	FRAM_MB85RC_I2C_T(uint8_t address, bool wp, uint8_t pin, uint16_t chipDensity) :
 		_i2c_addr(address),
 		_framInitialised(false),
 		_manualMode(true),
 		_density(chipDensity),
-		_wpPin(pin)
+		_wp(wp, pin)
 	{
 	}
 
 	void begin(void) {
-		#if defined(MANAGE_WP) && MANAGE_WP == true
-		pinMode(_wpPin, OUTPUT);
-		if (wp) {
-			enableWP();
-		} else {
-			disableWP();
-		}
-		#endif
+		_wp.init();
 
 		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
 		byte deviceFound =
@@ -107,10 +102,7 @@ public:
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("FRAM_MB85RC_I2C object created"));
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("I2C device address 0x"));
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_i2c_addr, HEX);
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("WP pin number "));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_wpPin, DEC);
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Write protect management: "));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(MANAGE_WP ? F("true") : F("false"));
+			_wp.describe();
 			if (deviceFound == ERROR_SUCCESS) {
 				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Memory Chip initialized"));
 				deviceIDs2Serial();
@@ -498,7 +490,6 @@ public:
 	/*!
 	    @brief  Return tu Write Protect status
 
-	    @params[in]  none
 		@returns
 					  boolean
 					  true : write protect enabled
@@ -506,59 +497,33 @@ public:
 	*/
 	/**************************************************************************/
 	boolean	getWPStatus(void) {
-		return _wpStatus;
+		return _wp.status();
 	}
 
 	/**************************************************************************/
 	/*!
 	    @brief  Enable write protect function of the chip by pulling up WP pin
 
-	    @params[in]   MANAGE_WP
-	                  WP management switch defined in header file
-	    @params[in]   _wpPin
-	                  pin number for WP pin
-		@param[out]	  _wpStatus
 		@returns
-					  0: success
-					  1: error, WP not managed
+					0: success
+					1: error, WP not managed
 	*/
 	/**************************************************************************/
 	byte enableWP(void) {
-		byte result;
-		if (MANAGE_WP) {
-			digitalWrite(_wpPin,HIGH);
-			_wpStatus = true;
-			result = ERROR_SUCCESS;
-		} else {
-			result = ERROR_NOT_PERMITTED;
-		}
-		return result;
+		return _wp.enable();
 	}
 
 	/**************************************************************************/
 	/*!
 	    @brief  Disable write protect function of the chip by pulling up WP pin
 
-	    @params[in]   MANAGE_WP
-	                  WP management switch defined in header file
-	    @params[in]   wpPin
-	                  pin number for WP pin
-		@param[out]	  wpStatus
 		@returns
 					  0: success
 					  1: error, WP not managed
 	*/
 	/**************************************************************************/
 	byte disableWP(void) {
-		byte result;
-		if (MANAGE_WP) {
-			digitalWrite(_wpPin,LOW);
-			_wpStatus = false;
-			result = ERROR_SUCCESS;
-		} else {
-			result = ERROR_NOT_PERMITTED;
-		}
-		return result;
+		return _wp.disable();
 	}
 
 	/**************************************************************************/
@@ -609,8 +574,7 @@ public:
 	uint16_t _density;
 	uint32_t _maxaddress;
 
-	uint8_t	_wpPin;
-	boolean	_wpStatus;
+	WriteProtectT _wp;
 
 	/**************************************************************************/
 	/*!
@@ -850,5 +814,12 @@ public:
 		}
 	}
 };
+
+// backward compatibility
+#if MANAGE_WP
+typedef FRAM_MB85RC_I2C_T<WriteProtect_Dynamic> FRAM_MB85RC_I2C;
+#else
+typedef FRAM_MB85RC_I2C_T<WriteProtect_Unmanaged> FRAM_MB85RC_I2C;
+#endif
 
 #endif

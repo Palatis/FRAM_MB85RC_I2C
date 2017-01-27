@@ -795,30 +795,27 @@ public:
 	*/
 	/**************************************************************************/
 	void I2CAddressAdapt(uint16_t framAddr) {
-		uint8_t chipaddress;
-
 		switch(_density) {
 		case 4:
-			chipaddress = (_i2c_addr | ((framAddr >> 8) & 0x1));
+			_i2c_addr = ((_i2c_addr & 0b11111110) | ((framAddr >> 8) & 0b00000001));
 			break;
 		case 16:
-			chipaddress = (_i2c_addr | ((framAddr >> 8) & 0x7));
+			_i2c_addr = ((_i2c_addr & 0b11111000) | ((framAddr >> 8) & 0b00000111));
 			break;
 		default:
-			chipaddress = _i2c_addr;
 			break;
 		}
 
 		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
 		DEBUB_SERIAL_FRAM_MB85RC_I2C.print("Calculated address 0x");
-		DEBUB_SERIAL_FRAM_MB85RC_I2C.println(chipaddress, HEX);
+		DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_i2c_addr, HEX);
 		#endif
 
 		if (_density < 64) {
-			Wire.beginTransmission(chipaddress);
+			Wire.beginTransmission(_i2c_addr);
 			Wire.write(framAddr & 0xFF);
 		} else {
-			Wire.beginTransmission(chipaddress);
+			Wire.beginTransmission(_i2c_addr);
 			Wire.write(framAddr >> 8);
 			Wire.write(framAddr & 0xFF);
 		}

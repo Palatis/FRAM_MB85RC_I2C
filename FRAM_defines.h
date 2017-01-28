@@ -2,7 +2,7 @@
 #define _FRAM_DEFINES_H_
 
 // IDs
-//Manufacturers codes
+// Manufacturers codes
 #define FUJITSU_MANUFACT_ID		0x00A
 #define CYPRESS_MANUFACT_ID		0x004
 #define MANUALMODE_MANUFACT_ID	0xF00
@@ -21,16 +21,25 @@
 #define DENSITY_FM24V05			0x03 // 512K
 #define DENSITY_FM24V10			0x04 // 1024K
 
-// Devices MB85RC16, MB85RC16V, MB85RC64A, MB85RC64V and MB85RC128A do not support Device ID reading
-// 			FM24W256,FM24CL64B, FM24C64B, FM24C16B, FM24C04B, FM24CL04B
+// Devices do not support Device ID reading:
+//   - FUJITSU:
+//       - 16 Kbit: MB85RC16, MB85RC16V
+//       - 64 Kbit: MB85RC64A, MB85RC64V,
+//       - 128 Kbit: MB85RC128A
+//   - Cypress:
+//       - 4 Kbit: FM24C04B, FM24CL04B
+//       - 16 Kbit: FM24C16B
+//       - 64 Kbit: FM24CL64B, FM24C64B
+//       - 256 Kbit: FM24W256
 
-#define MAXADDRESS_04	512
-#define MAXADDRESS_16	2048
-#define MAXADDRESS_64	8192
-#define MAXADDRESS_128	16384
-#define MAXADDRESS_256	32768
-#define MAXADDRESS_512	65536
-#define MAXADDRESS_1024	65536 // 1M devices are in fact managed as 2 512 devices from lib point of view > create 2 instances of the object with each a differnt address
+#define MAXADDRESS_04			512
+#define MAXADDRESS_16			2048
+#define MAXADDRESS_64			8192
+#define MAXADDRESS_128			16384
+#define MAXADDRESS_256			32768
+#define MAXADDRESS_512			65536
+#define MAXADDRESS_1024			65536 // 1M devices are in fact managed as 2 512 devices from lib point of view
+									  // create 2 instances of the object with each a differnt address
 
 // Adresses
 #define MB85RC_ADDRESS_A000		0x50
@@ -43,7 +52,7 @@
 #define MB85RC_ADDRESS_A111		0x57
 #define MB85RC_DEFAULT_ADDRESS	MB85RC_ADDRESS_A000
 
-//Special commands
+// Special commands
 #define MASTER_CODE	0xF8
 #define SLEEP_MODE	0x86 //Cypress codes, not used here
 #define HIGH_SPEED	0x08 //Cypress codes, not used here

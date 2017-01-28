@@ -378,7 +378,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	__attribute__ ((always_inline)) inline
+	__attribute__ ((always_inline, deprecated)) inline
 	byte readWord(uint16_t const framAddr, uint16_t * const value) {
 		return readArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t * const>(value));
 	}
@@ -395,7 +395,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	__attribute__ ((always_inline)) inline
+	__attribute__ ((always_inline, deprecated)) inline
 	byte writeWord(uint16_t const framAddr, uint16_t const value) {
 		return writeArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t const * const>(&value));
 	}
@@ -412,7 +412,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	__attribute__ ((always_inline)) inline
+	__attribute__ ((always_inline, deprecated)) inline
 	byte readLong(uint16_t const framAddr, uint32_t * const value) {
 		return readArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t * const>(value));
 	}
@@ -429,7 +429,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	__attribute__ ((always_inline)) inline
+	__attribute__ ((always_inline, deprecated)) inline
 	byte writeLong(uint16_t const framAddr, uint32_t const value) {
 		return writeArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t const * const>(&value));
 	}

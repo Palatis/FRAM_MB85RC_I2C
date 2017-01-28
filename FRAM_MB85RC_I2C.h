@@ -436,6 +436,42 @@ public:
 
 	/**************************************************************************/
 	/*!
+	    @brief  Read a 32bits value from the specified FRAM address
+
+	    @params[in] framAddr
+	                The 16-bit address to read from FRAM memory
+		@params[out] value
+					Any tope of value
+	    @returns
+					return code of Wire.endTransmission()
+	*/
+	/**************************************************************************/
+	template < typename T >
+	__attribute__ ((always_inline))	inline
+	byte readFrom(uint16_t const framAddr, T & value) {
+		return readArray(framAddr, sizeof(T), reinterpret_cast<uint8_t * const>(&value));
+	}
+
+	/**************************************************************************/
+	/*!
+	    @brief  Write a value to the specified FRAM address
+
+	    @params[in] framAddr
+	                The 16-bit address to write to FRAM memory
+		@params[in] value
+					Any type of value
+	    @returns
+					return code of Wire.endTransmission()
+	*/
+	/**************************************************************************/
+	template < typename T >
+	__attribute__ ((always_inline)) inline
+	byte writeTo(uint16_t const framAddr, T const & value) {
+		return writeArray(framAddr, sizeof(T), reinterpret_cast<uint8_t const * const>(&value));
+	}
+
+	/**************************************************************************/
+	/*!
 	    @brief  Reads the Manufacturer ID and the Product ID frm the IC
 
 	    @params[in]   idtype

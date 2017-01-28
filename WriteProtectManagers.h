@@ -14,7 +14,7 @@
 class WriteProtect_Dynamic {
 public:
 	__attribute__ ((always_inline)) inline
-	WriteProtect_Dynamic(bool wp, uint8_t pin):
+	WriteProtect_Dynamic(bool const wp, uint8_t const pin):
 		_wp(wp),
 		_pin(pin)
 	{
@@ -65,7 +65,7 @@ template < uint8_t pin >
 class WriteProtect_Static {
 public:
 	__attribute__ ((always_inline)) inline
-	WriteProtect_Static(bool wp, uint8_t):
+	WriteProtect_Static(bool const wp, uint8_t const):
 	 	_wp(wp)
 	{ }
 
@@ -108,7 +108,7 @@ private:
 class WriteProtect_Unmanaged {
 public:
 	__attribute__ ((always_inline)) inline
-	WriteProtect_Unmanaged(bool, uint8_t) { }
+	WriteProtect_Unmanaged(bool const, uint8_t const) { }
 
 	__attribute__ ((always_inline)) inline
 	void init() { }

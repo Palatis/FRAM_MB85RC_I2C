@@ -58,17 +58,31 @@
 #define HIGH_SPEED	0x08 //Cypress codes, not used here
 
 // Error management
-#define ERROR_SUCCESS				0 // Success
-#define ERROR_TOO_LONG				1 // Data too long to fit the transmission buffer on Arduino
-#define ERROR_NACK_ON_ADDRESS		2 // received NACK on transmit of address
-#define ERROR_NACK_ON_DATA			3 // received NACK on transmit of data
-#define ERROR_SERIAL_UNAVAILABLE	4 // Serial seems not available
-#define ERROR_DEVICE_ID				5 // Not referenced device ID
-#define ERROR_UNUSED				6 // Unused
-#define ERROR_CHIP_UNIDENTIFIED		7 // Fram chip unidentified
-#define ERROR_TOO_SHORT				8 // Number of bytes asked to read null
-#define ERROR_INVALID_BIT_POS		9 // Bit position out of range
-#define ERROR_NOT_PERMITTED			10 // Not permitted operation
-#define ERROR_OUT_OF_RANGE			11 // Memory address out of range
+#define ERROR_SUCCESS				0	// Success
+#define ERROR_TOO_LONG				1	// Data too long to fit the transmission buffer on Arduino
+#define ERROR_NACK_ON_ADDRESS		2	// received NACK on transmit of address
+#define ERROR_NACK_ON_DATA			3	// received NACK on transmit of data
+#define ERROR_SERIAL_UNAVAILABLE	4	// Serial seems not available
+#define ERROR_DEVICE_ID				5	// Not referenced device ID
+#define ERROR_UNUSED				6	// Unused
+#define ERROR_CHIP_UNIDENTIFIED		7	// Fram chip unidentified
+#define ERROR_TOO_SHORT				8	// Number of bytes asked to read null
+#define ERROR_INVALID_BIT_POS		9	// Bit position out of range
+#define ERROR_NOT_PERMITTED			10	// Not permitted operation
+#define ERROR_OUT_OF_RANGE			11	// Memory address out of range
+
+// for backward compatibility
+#define ERROR_0		ERROR_SUCCESS
+#define ERROR_1		ERROR_TOO_LONG
+#define ERROR_2		ERROR_NACK_ON_ADDRESS
+#define ERROR_3		ERROR_NACK_ON_DATA
+#define ERROR_4		ERROR_SERIAL_UNAVAILABLE
+#define ERROR_5		ERROR_DEVICE_ID
+#define ERROR_6		ERROR_UNUSED
+#define ERROR_7		ERROR_CHIP_UNIDENTIFIED
+#define ERROR_8		ERROR_TOO_SHORT
+#define ERROR_9		ERROR_INVALID_BIT_POS
+#define ERROR_10	ERROR_NOT_PERMITTED
+#define ERROR_11	ERROR_OUT_OF_RANGE
 
 #endif

@@ -54,6 +54,7 @@
 #include <WProgram.h>
 #endif
 
+#include <utility/twi.h>
 #include <Wire.h>
 
 #include "FRAM_defines.h"
@@ -594,9 +595,16 @@ public:
 			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Start erasing device"));
 		#endif
 
-		while((i < _maxaddress) && (result == 0)) {
-			result = writeByte(i, 0x00);
-			i++;
+		uint16_t addr = 0x0000;
+		uint32_t length = _maxaddress;
+		while (length != 0) {
+			uint8_t bytes = min(length, TWI_BUFFER_LENGTH);
+			I2CAddressAdapt(addr);
+			while(bytes-- && (result == 0)) {
+				result = Wire.write(0x00);
+			}
+			addr += bytes;
+			length -= bytes;
 		}
 
 		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)

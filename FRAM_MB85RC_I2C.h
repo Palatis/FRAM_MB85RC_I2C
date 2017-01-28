@@ -251,43 +251,68 @@ public:
 
 	/**************************************************************************/
 	/*!
-	    @brief  Reads an array of bytes from the specified FRAM address
+	    @brief  Reads an array of bytes from the specified FRAM address without
+				any checks! (Unsafe!)
 
-	    @params[in] i2cAddr
-	                The I2C address of the FRAM memory chip (1010+A2+A1+A0)
 	    @params[in] framAddr
 	                The 16-bit address to read from in FRAM memory
 		@params[in] items
 					number of items to read from memory chip
-		@params[out] values[]
+		@params[out] values
 					array to be filled in by the memory read
 	    @returns
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	byte readArray (uint16_t const framAddr, byte const items, uint8_t * const values) {
+	byte readArrayUnsafe(uint16_t const framAddr, uint8_t const items, uint8_t * const values) {
+		I2CAddressAdapt(framAddr);
+		byte result = Wire.endTransmission();
+		Wire.requestFrom(_i2c_addr, items);
+		for (byte i=0; i < items; i++)
+			values[i] = Wire.read();
+		return result;
+	}
+
+	/**************************************************************************/
+	/*!
+	    @brief  Reads an array of bytes from the specified FRAM address.
+				This method does range check and length check, and tries to read
+				all the data even if length exceeds TWI_BUFFER_LENGTH.
+
+	    @params[in] framAddr
+	                The 16-bit address to read from in FRAM memory
+		@params[in] items
+					number of items to read from memory chip
+		@params[out] values
+					array to be filled in by the memory read
+	    @returns
+					return code of Wire.endTransmission()
+	*/
+	/**************************************************************************/
+	byte readArray(uint16_t framAddr, uint16_t items, uint8_t * values) {
+		if (items >= _maxaddress)
+			return ERROR_TOO_LONG;
 		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress))
 			return ERROR_OUT_OF_RANGE;
-		byte result;
-		if (items == 0) {
-			result = ERROR_TOO_SHORT; //number of bytes asked to read null
-		} else {
-			I2CAddressAdapt(framAddr);
-			result = Wire.endTransmission();
-			Wire.requestFrom(_i2c_addr, (uint8_t)items);
-			for (byte i=0; i < items; i++) {
-				values[i] = Wire.read();
-			}
+		if (items == 0)
+			return ERROR_TOO_SHORT; //number of bytes asked to read null
+
+		byte result = 0;
+		while ((items != 0) && (result == 0)) {
+			uint8_t bytes = min(items, TWI_BUFFER_LENGTH);
+			result = readArrayUnsafe(framAddr, bytes, values);
+			framAddr += bytes;
+			values += bytes;
+			items -= bytes;
 		}
 		return result;
 	}
 
 	/**************************************************************************/
 	/*!
-	    @brief  Writes an array of bytes from a specific address
+	    @brief  Writes an array of bytes to the specific FRAM address without
+				any checks! (Unsafe!)
 
-	    @params[in] i2cAddr
-	                The I2C address of the FRAM memory chip (1010+A2+A1+A0)
 	    @params[in] framAddr
 	                The 16-bit address to write to in FRAM memory
 	    @params[in] items
@@ -298,14 +323,46 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	byte writeArray (uint16_t const framAddr, byte const items, uint8_t const values[]) {
-		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress))
-		 	return ERROR_OUT_OF_RANGE;
+	byte writeArrayUnsafe(uint16_t const framAddr, byte const items, uint8_t const * const values) {
 		I2CAddressAdapt(framAddr);
 		for (byte i=0; i < items ; i++) {
 			Wire.write(values[i]);
 		}
 		return Wire.endTransmission();
+	}
+
+	/**************************************************************************/
+	/*!
+	    @brief  Writes an array of bytes to the specific FRAM address.
+				This method does range check and length check, and tries to write
+				all the data even if length exceeds TWI_BUFFER_LENGTH.
+	    @params[in] framAddr
+	                The 16-bit address to write to in FRAM memory
+	    @params[in] items
+	                The number of items to write from the array
+		@params[in] values[]
+	                The array of bytes to write
+		@returns
+					return code of Wire.endTransmission()
+	*/
+	/**************************************************************************/
+	byte writeArray(uint16_t framAddr, uint16_t items, uint8_t const * values) {
+		if (items >= _maxaddress)
+			return ERROR_TOO_LONG;
+		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress))
+		 	return ERROR_OUT_OF_RANGE;
+		if (items == 0)
+			return ERROR_TOO_SHORT; // number of bytes asked to write null
+
+		byte result = 0;
+		while ((items != 0) && (result == 0)) {
+			uint8_t bytes = min(items, TWI_BUFFER_LENGTH);
+			result = writeArrayUnsafe(framAddr, bytes, values);
+			framAddr += bytes;
+			values += bytes;
+			items -= bytes;
+		}
+		return result;
 	}
 
 	/**************************************************************************/
@@ -381,7 +438,7 @@ public:
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
 	byte readWord(uint16_t const framAddr, uint16_t * const value) {
-		return readArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t * const>(value));
+		return readArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t *>(value));
 	}
 
 	/**************************************************************************/
@@ -398,7 +455,7 @@ public:
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
 	byte writeWord(uint16_t const framAddr, uint16_t const value) {
-		return writeArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t const * const>(&value));
+		return writeArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t const *>(&value));
 	}
 
 	/**************************************************************************/

@@ -50,7 +50,7 @@
 
 // Error management
 #define ERROR_SUCCESS				0 // Success
-#define ERROR_OUT_OF_RANGE			1 // Data too long to fit the transmission buffer on Arduino
+#define ERROR_TOO_LONG				1 // Data too long to fit the transmission buffer on Arduino
 #define ERROR_NACK_ON_ADDRESS		2 // received NACK on transmit of address
 #define ERROR_NACK_ON_DATA			3 // received NACK on transmit of data
 #define ERROR_SERIAL_UNAVAILABLE	4 // Serial seems not available
@@ -60,6 +60,6 @@
 #define ERROR_TOO_SHORT				8 // Number of bytes asked to read null
 #define ERROR_INVALID_BIT_POS		9 // Bit position out of range
 #define ERROR_NOT_PERMITTED			10 // Not permitted operation
-#define ERROR_OUT_OF_RANGE1			11 // Memory address out of range
+#define ERROR_OUT_OF_RANGE			11 // Memory address out of range
 
 #endif

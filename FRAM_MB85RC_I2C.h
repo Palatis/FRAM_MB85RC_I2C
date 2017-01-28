@@ -265,7 +265,8 @@ public:
 	*/
 	/**************************************************************************/
 	byte readArray (uint16_t const framAddr, byte const items, uint8_t * const values) {
-		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress)) return ERROR_OUT_OF_RANGE1;
+		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress))
+			return ERROR_OUT_OF_RANGE;
 		byte result;
 		if (items == 0) {
 			result = ERROR_TOO_SHORT; //number of bytes asked to read null
@@ -297,7 +298,8 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeArray (uint16_t const framAddr, byte const items, uint8_t const values[]) {
-		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress)) return ERROR_OUT_OF_RANGE1;
+		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress))
+		 	return ERROR_OUT_OF_RANGE;
 		I2CAddressAdapt(framAddr);
 		for (byte i=0; i < items ; i++) {
 			Wire.write(values[i]);

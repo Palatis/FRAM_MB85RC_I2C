@@ -265,7 +265,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte readArrayUnsafe(uint16_t const & framAddr, uint8_t const items, uint8_t * const values) {
-		I2CAddressAdapt(framAddr);
+		_framAddressAdapt(framAddr);
 		byte result = Wire.endTransmission();
 		Wire.requestFrom(_i2c_addr, items);
 		for (byte i=0; i < items; i++)
@@ -324,7 +324,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeArrayUnsafe(uint16_t const & framAddr, byte const items, uint8_t const * const values) {
-		I2CAddressAdapt(framAddr);
+		_framAddressAdapt(framAddr);
 		for (byte i=0; i < items ; i++) {
 			Wire.write(values[i]);
 		}
@@ -656,7 +656,7 @@ public:
 		uint32_t length = _maxaddress;
 		while (length != 0) {
 			uint8_t bytes = min(length, TWI_BUFFER_LENGTH);
-			I2CAddressAdapt(addr);
+			_framAddressAdapt(addr);
 			while(bytes-- && (result == 0)) {
 				result = Wire.write(0x00);
 			}
@@ -897,7 +897,7 @@ public:
 		@returns	 void
 	*/
 	/**************************************************************************/
-	void I2CAddressAdapt(uint16_t const & framAddr) {
+	void _framAddressAdapt(uint16_t const & framAddr) {
 		switch(_density) {
 		case 4:
 			_i2c_addr = ((_i2c_addr & 0b11111110) | ((framAddr >> 8) & 0b00000001));

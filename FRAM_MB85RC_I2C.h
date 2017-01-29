@@ -154,7 +154,7 @@ public:
 					return code 9 if bit position is larger than 7
 	*/
 	/**************************************************************************/
-	byte readBit(uint16_t const framAddr, uint8_t const bitNb, byte *bit) {
+	byte readBit(uint16_t const & framAddr, uint8_t const bitNb, byte * bit) {
 		byte result;
 		if (bitNb > 7) {
 			result = ERROR_INVALID_BIT_POS;
@@ -179,7 +179,7 @@ public:
 					return code 9 if bit position is larger than 7
 	*/
 	/**************************************************************************/
-	byte setOneBit(uint16_t const framAddr, uint8_t const bitNb) {
+	byte setOneBit(uint16_t const & framAddr, uint8_t const bitNb) {
 		byte result;
 		if (bitNb > 7)  {
 			result = ERROR_INVALID_BIT_POS;
@@ -205,7 +205,7 @@ public:
 					return code 9 if bit position is larger than 7
 	*/
 	/**************************************************************************/
-	byte clearOneBit(uint16_t const framAddr, uint8_t const bitNb) {
+	byte clearOneBit(uint16_t const & framAddr, uint8_t const bitNb) {
 		byte result;
 		if (bitNb > 7) {
 			result = ERROR_INVALID_BIT_POS;
@@ -231,7 +231,7 @@ public:
 					return code 9 if bit position is larger than 7
 	*/
 	/**************************************************************************/
-	byte toggleBit(uint16_t const framAddr, uint8_t const bitNb) {
+	byte toggleBit(uint16_t const & framAddr, uint8_t const bitNb) {
 		byte result;
 		if (bitNb > 7) {
 			result = ERROR_INVALID_BIT_POS;
@@ -264,7 +264,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	byte readArrayUnsafe(uint16_t const framAddr, uint8_t const items, uint8_t * const values) {
+	byte readArrayUnsafe(uint16_t const & framAddr, uint8_t const items, uint8_t * const values) {
 		I2CAddressAdapt(framAddr);
 		byte result = Wire.endTransmission();
 		Wire.requestFrom(_i2c_addr, items);
@@ -323,7 +323,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	byte writeArrayUnsafe(uint16_t const framAddr, byte const items, uint8_t const * const values) {
+	byte writeArrayUnsafe(uint16_t const & framAddr, byte const items, uint8_t const * const values) {
 		I2CAddressAdapt(framAddr);
 		for (byte i=0; i < items ; i++) {
 			Wire.write(values[i]);
@@ -380,7 +380,7 @@ public:
 	*/
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
-	byte readByte (uint16_t const framAddr, uint8_t * const value) {
+	byte readByte (uint16_t const & framAddr, uint8_t * const value) {
 		return readArray(framAddr, sizeof(uint8_t), value);
 	}
 
@@ -399,7 +399,7 @@ public:
 	*/
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
-	byte writeByte (uint16_t const framAddr, uint8_t const value) {
+	byte writeByte (uint16_t const & framAddr, uint8_t const value) {
 		return writeArray(framAddr, sizeof(uint8_t), &value);
 	}
 
@@ -417,7 +417,7 @@ public:
 					return code of Wire.endTransmission()
 	*/
 	/**************************************************************************/
-	byte copyByte (uint16_t const origAddr, uint16_t const destAddr) {
+	byte copyByte (uint16_t const & origAddr, uint16_t const & destAddr) {
 		uint8_t buffer;
 		byte result = readByte(origAddr, &buffer);
 		result = writeByte(destAddr, buffer);
@@ -437,7 +437,7 @@ public:
 	*/
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
-	byte readWord(uint16_t const framAddr, uint16_t * const value) {
+	byte readWord(uint16_t const & framAddr, uint16_t * const value) {
 		return readArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t *>(value));
 	}
 
@@ -454,7 +454,7 @@ public:
 	*/
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
-	byte writeWord(uint16_t const framAddr, uint16_t const value) {
+	byte writeWord(uint16_t const & framAddr, uint16_t const & value) {
 		return writeArray(framAddr, sizeof(uint16_t), reinterpret_cast<uint8_t const *>(&value));
 	}
 
@@ -471,7 +471,7 @@ public:
 	*/
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
-	byte readLong(uint16_t const framAddr, uint32_t * const value) {
+	byte readLong(uint16_t const & framAddr, uint32_t * const value) {
 		return readArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t * const>(value));
 	}
 
@@ -488,7 +488,7 @@ public:
 	*/
 	/**************************************************************************/
 	__attribute__ ((always_inline, deprecated)) inline
-	byte writeLong(uint16_t const framAddr, uint32_t const value) {
+	byte writeLong(uint16_t const & framAddr, uint32_t const & value) {
 		return writeArray(framAddr, sizeof(uint32_t), reinterpret_cast<uint8_t const * const>(&value));
 	}
 
@@ -506,7 +506,7 @@ public:
 	/**************************************************************************/
 	template < typename T >
 	__attribute__ ((always_inline))	inline
-	byte readFrom(uint16_t const framAddr, T & value) {
+	byte readFrom(uint16_t const & framAddr, T & value) {
 		return readArray(framAddr, sizeof(T), reinterpret_cast<uint8_t * const>(&value));
 	}
 
@@ -897,7 +897,7 @@ public:
 		@returns	 void
 	*/
 	/**************************************************************************/
-	void I2CAddressAdapt(uint16_t const framAddr) {
+	void I2CAddressAdapt(uint16_t const & framAddr) {
 		switch(_density) {
 		case 4:
 			_i2c_addr = ((_i2c_addr & 0b11111110) | ((framAddr >> 8) & 0b00000001));

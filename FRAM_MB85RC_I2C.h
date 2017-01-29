@@ -59,6 +59,7 @@
 
 #include "FRAM_defines.h"
 #include "FRAM_WriteProtectManagers.h"
+#include "FRAM_DeviceIdentifiers.h"
 
 // Enabling debug I2C - comment to disable / normal operations
 //#define DEBUB_SERIAL_FRAM_MB85RC_I2C Serial
@@ -68,25 +69,22 @@
 #define DEFAULT_WP_PIN	13 //write protection pin - active high, write enabled when low
 #define DEFAULT_WP_STATUS  false //false means protection is off - write is enabled
 
-template < typename WriteProtectT >
+template < typename WriteProtectT, typename DeviceIdentifierT >
 class FRAM_MB85RC_I2C_T {
 public:
 	// This constructor probes the i2c bus for a device with device IDs implemented
 	FRAM_MB85RC_I2C_T(uint8_t const address = MB85RC_DEFAULT_ADDRESS, bool const wp = DEFAULT_WP_STATUS, uint8_t const pin = DEFAULT_WP_PIN) :
 		_i2c_addr(address),
-		_framInitialised(false),
-		_manualMode(false),
-		_wp(wp, pin)
+		_wp(wp, pin),
+		_device_id(false, 0)
 	{
 	}
 
 	// This constructor provides capability for chips without the device IDs implemented
-	FRAM_MB85RC_I2C_T(uint8_t const address, bool const wp, uint8_t const pin, uint16_t const chipDensity) :
+	FRAM_MB85RC_I2C_T(uint8_t const address, bool const wp, uint8_t const pin, uint16_t const density) :
 		_i2c_addr(address),
-		_framInitialised(false),
-		_manualMode(true),
-		_density(chipDensity),
-		_wp(wp, pin)
+		_wp(wp, pin),
+		_device_id(true, density)
 	{
 	}
 
@@ -106,7 +104,7 @@ public:
 			_wp.describe();
 			if (deviceFound == ERROR_SUCCESS) {
 				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Memory Chip initialized"));
-				deviceIDs2Serial();
+				_device_id.describe();
 			} else {
 				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Memory Chip NOT FOUND"));
 			}
@@ -123,20 +121,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte checkDevice(void) {
-		byte result;
-		if (_manualMode) {
-			result = setDeviceIDs();
-		} else {
-			result = getDeviceIDs();
-		}
-
-		if ((result == ERROR_SUCCESS) && ((_manufacturer == FUJITSU_MANUFACT_ID) || (_manufacturer == CYPRESS_MANUFACT_ID) || (_manufacturer == MANUALMODE_MANUFACT_ID)) && (_maxaddress != 0)) {
-			_framInitialised = true;
-		} else {
-			result = ERROR_CHIP_UNIDENTIFIED;
-			_framInitialised = false;
-		}
-		return result;
+		return _device_id.checkDevice(_i2c_addr);
 	}
 
 	/**************************************************************************/
@@ -290,9 +275,9 @@ public:
 	*/
 	/**************************************************************************/
 	byte readArray(uint16_t framAddr, uint16_t items, uint8_t * values) {
-		if (items >= _maxaddress)
+		if (items >= _device_id.getMaxAddress())
 			return ERROR_TOO_LONG;
-		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress))
+		if ((framAddr >= _device_id.getMaxAddress()) || ((framAddr + items - 1) >= _device_id.getMaxAddress()))
 			return ERROR_OUT_OF_RANGE;
 		if (items == 0)
 			return ERROR_TOO_SHORT; //number of bytes asked to read null
@@ -347,9 +332,9 @@ public:
 	*/
 	/**************************************************************************/
 	byte writeArray(uint16_t framAddr, uint16_t items, uint8_t const * values) {
-		if (items >= _maxaddress)
+		if (items >=  _device_id.getMaxAddress())
 			return ERROR_TOO_LONG;
-		if ((framAddr >= _maxaddress) || ((framAddr + (uint16_t) items - 1) >= _maxaddress))
+		if ((framAddr >=  _device_id.getMaxAddress()) || ((framAddr + items - 1) >= _device_id.getMaxAddress()))
 		 	return ERROR_OUT_OF_RANGE;
 		if (items == 0)
 			return ERROR_TOO_SHORT; // number of bytes asked to write null
@@ -533,7 +518,7 @@ public:
 	    @brief  Reads the Manufacturer ID and the Product ID frm the IC
 
 	    @params[in]   idtype
-					  1: Manufacturer ID, 2: ProductID, 3:_density code, 4:_density
+					  1: Manufacturer ID, 2: ProductID, 3:density code, 4:density
 		@params[out]  *id
 	                  The 16 bits ID value
 	    @returns
@@ -542,35 +527,7 @@ public:
 	*/
 	/**************************************************************************/
 	byte getOneDeviceID(uint8_t const idType, uint16_t * const id) {
-		byte result;
-		const uint8_t manuf = 1;
-		const uint8_t prod = 2;
-		const uint8_t densc = 3;
-		const uint8_t densi = 4;
-
-		switch (idType) {
-		case manuf:
-			*id = _manufacturer;
-			result = ERROR_SUCCESS;
-			break;
-		case prod:
-			*id = _productid;
-			result = ERROR_SUCCESS;
-			break;
-		case densc:
-			*id = _densitycode;
-			result = ERROR_SUCCESS;
-			break;
-		case densi:
-			*id = _density;
-			result = ERROR_SUCCESS;
-			break;
-		default:
-			*id = 0;
-			result = ERROR_DEVICE_ID;
-			break;
-		}
-		return result;
+		return _device_id.getOneDeviceID(idType, id);
 	}
 
 	/**************************************************************************/
@@ -586,7 +543,7 @@ public:
 	/**************************************************************************/
 	__attribute__ ((always_inline)) inline
 	boolean	isReady(void) {
-		return _framInitialised;
+		return _device_id.isFramInitialized();
 	}
 
 	/**************************************************************************/
@@ -653,7 +610,7 @@ public:
 		#endif
 
 		uint16_t addr = 0x0000;
-		uint32_t length = _maxaddress;
+		uint32_t length = _device_id.getMaxAddress();
 		while (length != 0) {
 			uint8_t bytes = min(length, TWI_BUFFER_LENGTH);
 			_framAddressAdapt(addr);
@@ -679,211 +636,9 @@ public:
 
  private:
 	uint8_t	_i2c_addr;
-	boolean	_framInitialised;
-	boolean	_manualMode;
-	uint16_t _manufacturer;
-	uint16_t _productid;
-	uint16_t _densitycode;
-	uint16_t _density;
-	uint32_t _maxaddress;
 
 	WriteProtectT _wp;
-
-	/**************************************************************************/
-	/*!
-	    @brief  Reads the Manufacturer ID and the Product ID from the IC and populate class' variables for devices supporting that feature
-
-	    @params[in]   none
-		@params[out]  manufacturerID
-	                  The 12-bit manufacturer ID (Fujitsu = 0x00A)
-	    @params[out]  productID
-	                  The memory density (bytes 11..8) and proprietary
-	                  Product ID fields (bytes 7..0). Should be 0x510 for
-	                  the MB85RC256V for instance.
-		@param[out]	  The memory densitycode (bytes 11..8)
-					  from 0x03 (64K chip) to 0x07 (1M chip)
-		@param[out]	  The memory density got from density code
-					  from 64 to 1024K
-		@param[out]	  The memory max address of storage slot
-	    @returns
-					  return code of Wire.endTransmission() or interpreted error.
-	*/
-	/**************************************************************************/
-	byte getDeviceIDs(void) {
-		uint8_t localbuffer[3] = { 0, 0, 0 };
-		uint8_t result;
-
-		/* Get device IDs sequence 	*/
-		/* 1/ Send 0xF8 to the I2C bus as a write instruction. bit 0: 0 => 0xF8 >> 1 */
-		/* Send 0xF8 to 12C bus. Bit shift to right as beginTransmission() requires a 7bit. beginTransmission() 0 for write => 0xF8 */
-		/* Send device address as 8 bits. Bit shift to left as we are using a simple write()                                        */
-		/* Send 0xF9 to I2C bus. By requesting 3 bytes to read, requestFrom() add a 1 bit at the end of a 7 bits address => 0xF9    */
-		/* See p.10 of http://www.fujitsu.com/downloads/MICRO/fsa/pdf/products/memory/fram/MB85RC-DS501-00017-3v0-E.pdf             */
-
-		Wire.beginTransmission(MASTER_CODE >> 1);
-		Wire.write((byte)(_i2c_addr << 1));
-		result = Wire.endTransmission(false);
-
-		Wire.requestFrom(MASTER_CODE >> 1, 3);
-		localbuffer[0] = (uint8_t) Wire.read();
-		localbuffer[1] = (uint8_t) Wire.read();
-		localbuffer[2] = (uint8_t) Wire.read();
-
-		/* Shift values to separate IDs */
-		_manufacturer = (localbuffer[0] << 4) + (localbuffer[1] >> 4);
-		_densitycode = (uint16_t)(localbuffer[1] & 0x0F);
-		_productid = ((localbuffer[1] & 0x0F) << 8) + localbuffer[2];
-
-		if (_manufacturer == FUJITSU_MANUFACT_ID) {
-			switch (_densitycode) {
-			case DENSITY_MB85RC04V:
-				_density = 4;
-				_maxaddress = MAXADDRESS_04;
-				break;
-			case DENSITY_MB85RC64TA:
-				_density = 64;
-				_maxaddress = MAXADDRESS_64;
-				break;
-			case DENSITY_MB85RC256V:
-				_density = 256;
-				_maxaddress = MAXADDRESS_256;
-				break;
-			case DENSITY_MB85RC512T:
-				_density = 512;
-				_maxaddress = MAXADDRESS_512;
-				break;
-			case DENSITY_MB85RC1MT:
-				_density = 1024;
-				_maxaddress = MAXADDRESS_1024;
-				break;
-			default:
-				_density = 0; /* means error */
-				_maxaddress = 0; /* means error */
-				if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
-				break;
-			}
-		} else if (_manufacturer == CYPRESS_MANUFACT_ID) {
-			switch (_densitycode) {
-			case DENSITY_CY15B128J:
-				_density = 128;
-				_maxaddress = MAXADDRESS_128;
-				break;
-			case DENSITY_CY15B256J:
-				_density = 256;
-				_maxaddress = MAXADDRESS_256;
-				break;
-			case DENSITY_FM24V05:
-				_density = 512;
-				_maxaddress = MAXADDRESS_512;
-				break;
-			case DENSITY_FM24V10:
-				_density = 1024;
-				_maxaddress = MAXADDRESS_1024;
-				break;
-			default:
-				_density = 0; /* means error */
-				_maxaddress = 0; /* means error */
-				if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
-				break;
-			}
-		} else {
-			_density = 0; /* means error */
-			_maxaddress = 0; /* means error */
-			if (result == 0) result = ERROR_CHIP_UNIDENTIFIED; /*device unidentified, comminication ok*/
-		}
-
-		return result;
-	}
-
-	/**************************************************************************/
-	/*!
-	    @brief  set devices IDs for chip that does not support the feature as this has not been implemented in every chips by manufacturers
-
-	    @params[in]   none
-
-		@params[out]  manufacturerID set as "manual mode"
-
-		@param[out]	  The memory max address of storage slot
-	    @returns
-					  return ERROR_SUCCESS, ERROR_CHIP_UNIDENTIFIED, ERROR_NOT_PERMITTED codes
-	*/
-	/**************************************************************************/
-	byte setDeviceIDs(void) {
-		if(_manualMode) {
-			switch(_density) {
-				case 4:
-					_maxaddress = MAXADDRESS_04;
-					break;
-				case 16:
-					_maxaddress = MAXADDRESS_16;
-					break;
-				case 64:
-					_maxaddress = MAXADDRESS_64;
-					break;
-				case 128:
-					_maxaddress = MAXADDRESS_128;
-					break;
-				case 256:
-					_maxaddress = MAXADDRESS_256;
-					break;
-				case 512:
-					_maxaddress = MAXADDRESS_512;
-					break;
-				case 1024:
-					_maxaddress = MAXADDRESS_1024;
-					break;
-				default:
-					_maxaddress = 0; /* means error */
-					break;
-			}
-			_densitycode = MANUALMODE_DENSITY_ID;
-			_productid = MANUALMODE_PRODUCT_ID;
-			_manufacturer = MANUALMODE_MANUFACT_ID;
-			if (_maxaddress !=0) {
-				return ERROR_SUCCESS;
-			} else {
-				return ERROR_CHIP_UNIDENTIFIED;
-			}
-		} else {
-			return ERROR_NOT_PERMITTED;
-		}
-	}
-
-	/**************************************************************************/
-	/*!
-	    @brief  Utility function to print out memory chip IDs to serial if Debug enabled
-
-	    @params[in]   SERIAL_DEBUG
-		@param[out]	  none
-		@returns
-					  0: success
-					  4: error, debug not activated or Serial not available
-	*/
-	/**************************************************************************/
-	byte deviceIDs2Serial(void) {
-		byte result = ERROR_SERIAL_UNAVAILABLE;
-		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
-		if (DEBUB_SERIAL_FRAM_MB85RC_I2C){
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("FRAM Device IDs"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Manufacturer 0x"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_manufacturer, HEX);
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("ProductID 0x"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_productid, HEX);
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Density code 0x"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_densitycode, HEX);
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(F("Density "));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.print(_density, DEC);
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println('K');
-			if ((_manufacturer != MANUALMODE_MANUFACT_ID) && (_density > 0))
-				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Device identfied automatically"));
-			if ((_manufacturer == MANUALMODE_MANUFACT_ID) && (_density > 0))
-				DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("Device properties set"));
-			DEBUB_SERIAL_FRAM_MB85RC_I2C.println(F("...... ...... ......"));
-			result = ERROR_SUCCESS;
-		}
-		#endif
-		return result;
-	}
+	DeviceIdentifierT _device_id;
 
 	/**************************************************************************/
 	/*!
@@ -898,38 +653,15 @@ public:
 	*/
 	/**************************************************************************/
 	void _framAddressAdapt(uint16_t const & framAddr) {
-		switch(_density) {
-		case 4:
-			_i2c_addr = ((_i2c_addr & 0b11111110) | ((framAddr >> 8) & 0b00000001));
-			break;
-		case 16:
-			_i2c_addr = ((_i2c_addr & 0b11111000) | ((framAddr >> 8) & 0b00000111));
-			break;
-		default:
-			break;
-		}
-
-		#if defined(DEBUB_SERIAL_FRAM_MB85RC_I2C)
-		DEBUB_SERIAL_FRAM_MB85RC_I2C.print("Calculated address 0x");
-		DEBUB_SERIAL_FRAM_MB85RC_I2C.println(_i2c_addr, HEX);
-		#endif
-
-		if (_density < 64) {
-			Wire.beginTransmission(_i2c_addr);
-			Wire.write(framAddr & 0xFF);
-		} else {
-			Wire.beginTransmission(_i2c_addr);
-			Wire.write(framAddr >> 8);
-			Wire.write(framAddr & 0xFF);
-		}
+		_i2c_addr = _device_id.framAddressAdapt(_i2c_addr, framAddr);
 	}
 };
 
 // backward compatibility
 #if MANAGE_WP
-typedef FRAM_MB85RC_I2C_T<WriteProtect_Dynamic> FRAM_MB85RC_I2C;
+typedef FRAM_MB85RC_I2C_T<WriteProtect_Dynamic, DeviceIdentifier_Probe> FRAM_MB85RC_I2C;
 #else
-typedef FRAM_MB85RC_I2C_T<WriteProtect_Unmanaged> FRAM_MB85RC_I2C;
+typedef FRAM_MB85RC_I2C_T<WriteProtect_Unmanaged, DeviceIdentifier_Probe> FRAM_MB85RC_I2C;
 #endif
 
 #endif

@@ -58,7 +58,7 @@
 #include <Wire.h>
 
 #include "FRAM_defines.h"
-#include "WriteProtectManagers.h"
+#include "FRAM_WriteProtectManagers.h"
 
 // Enabling debug I2C - comment to disable / normal operations
 //#define DEBUB_SERIAL_FRAM_MB85RC_I2C Serial

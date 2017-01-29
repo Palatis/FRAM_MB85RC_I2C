@@ -1,5 +1,5 @@
-#ifndef _WRITE_PROTECT_MANAGERS_H_
-#define _WRITE_PROTECT_MANAGERS_H_
+#ifndef _FRAM_WRITE_PROTECT_MANAGERS_H_
+#define _FRAM_WRITE_PROTECT_MANAGERS_H_
 
 #if ARDUINO >= 100
 #include <Arduino.h>
